@@ -3287,7 +3287,7 @@ LRESULT CMainFrame::OnGraphNotify(WPARAM wParam, LPARAM lParam)
                 TRACE(_T("\t%Id %Id\n"), evParam1, evParam2);
                 break;
             case EC_VIDEO_SIZE_CHANGED: {
-                CSize size((DWORD)evParam1);
+                CSize size(LOWORD(evParam1), HIWORD(evParam1));
                 TRACE(_T("\t%ldx%ld\n"), size.cx, size.cy);
                 const bool bWasAudioOnly = m_fAudioOnly;
                 m_fAudioOnly = (size.cx <= 0 || size.cy <= 0);
@@ -14995,6 +14995,9 @@ void CMainFrame::CheckSelectedVideoStream()
 {
     if (m_fCustomGraph) {
         return;
+    }
+    if (m_fAudioOnly) {
+        m_statusbarVideoFormat.Empty();
     }
 
     CString fcc;

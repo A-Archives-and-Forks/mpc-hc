@@ -111,7 +111,7 @@ CAppSettings::CAppSettings()
     , fReportFailedPins(true)
     , fAutoloadAudio(true)
     , fBlockVSFilter(true)
-    , bBlockRDP(false)
+    , bBlockRDP(true)
     , nVolumeStep(5)
     , nSpeedStep(0)
     , nDefaultToolbarSize(24)
@@ -1668,7 +1668,7 @@ void CAppSettings::LoadSettings()
     strSubtitlesLanguageOrder = pApp->GetProfileString(IDS_R_SETTINGS, IDS_RS_SUBTITLESLANGORDER);
     strAudiosLanguageOrder = pApp->GetProfileString(IDS_R_SETTINGS, IDS_RS_AUDIOSLANGORDER);
     fBlockVSFilter = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_BLOCKVSFILTER, TRUE);
-    bBlockRDP = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_BLOCKRDP, FALSE);
+    bBlockRDP = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_BLOCKRDP, TRUE);
     fEnableWorkerThreadForOpening = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_ENABLEWORKERTHREADFOROPENING, TRUE);
     fReportFailedPins = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_REPORTFAILEDPINS, TRUE);
     fAllowMultipleInst = !!pApp->GetProfileInt(IDS_R_SETTINGS, IDS_RS_MULTIINST, FALSE);

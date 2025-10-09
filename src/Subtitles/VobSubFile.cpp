@@ -314,7 +314,11 @@ bool CVobSubFile::Open(CString fn)
         Close();
 
         int ver;
-        if (!ReadIdx(fn + _T(".idx"), ver)) {
+        try {
+            if (!ReadIdx(fn + _T(".idx"), ver)) {
+                break;
+            }
+        } catch (...) {
             break;
         }
 

@@ -730,13 +730,15 @@ void SubtitlesTask::ThreadProc()
         } else if (m_nType & STT_DOWNLOAD) {
         }
 
-        CAutoLock tlock(&m_csThreadLock);
-        for (auto& iter : m_pThreads) {
-            VERIFY(iter->CreateThread());
+        {
+            CAutoLock tlock(&m_csThreadLock);
+            for (auto& iter : m_pThreads) {
+                VERIFY(iter->CreateThread());
 
-            // Provide a timing advantage for providers with higher priority
-            if (m_nType & STT_SEARCH) {
-                Sleep(100);
+                // Provide a timing advantage for providers with higher priority
+                if (m_nType & STT_SEARCH) {
+                    Sleep(100);
+                }
             }
         }
 

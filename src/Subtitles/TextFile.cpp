@@ -47,7 +47,6 @@ bool CTextFile::Open(LPCTSTR lpszFileName)
     wchar_t shortpath[MAX_PATH];
     LPCTSTR lpszFileNameShort = lpszFileName;
     if (lstrlen(lpszFileName) > MAX_PATH) {
-        wchar_t shortpath[MAX_PATH];
         DWORD len = GetShortPathNameW(lpszFileName, shortpath, MAX_PATH);
         if (len > 0 && len <= MAX_PATH) {
             lpszFileNameShort = shortpath;

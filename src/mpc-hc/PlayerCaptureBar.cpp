@@ -107,4 +107,15 @@ BOOL CPlayerCaptureBar::PreTranslateMessage(MSG* pMsg)
 }
 
 BEGIN_MESSAGE_MAP(CPlayerCaptureBar, CMPCThemePlayerBar)
+    ON_WM_NCLBUTTONUP()
 END_MESSAGE_MAP()
+
+
+void CPlayerCaptureBar::OnNcLButtonUp(UINT nHitTest, CPoint point)
+{
+    __super::OnNcLButtonUp(nHitTest, point);
+
+    if (nHitTest == HTCLOSE) {
+        AfxGetAppSettings().bHideCaptureSettings = true;
+    }
+}

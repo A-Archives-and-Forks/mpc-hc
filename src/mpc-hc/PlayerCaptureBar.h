@@ -48,4 +48,6 @@ protected:
     virtual BOOL PreTranslateMessage(MSG* pMsg);
 
     DECLARE_MESSAGE_MAP()
+
+    afx_msg void OnNcLButtonUp(UINT nHitTest, CPoint point);
 };

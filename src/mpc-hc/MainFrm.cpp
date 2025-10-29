@@ -4147,11 +4147,12 @@ LRESULT CMainFrame::OnFilePostOpenmedia(WPARAM wParam, LPARAM lParam)
         }
         else if (GetPlaybackMode() == PM_ANALOG_CAPTURE) {
             // show capture bar
-            if (!m_controls.ControlChecked(CMainFrameControls::Panel::CAPTURE)) {
-                m_controls.ToggleControl(CMainFrameControls::Panel::CAPTURE);
-            }
-            else {
-                ASSERT(FALSE);
+            if (!s.bHideCaptureSettings) {
+                if (!m_controls.ControlChecked(CMainFrameControls::Panel::CAPTURE)) {
+                    m_controls.ToggleControl(CMainFrameControls::Panel::CAPTURE);
+                } else {
+                    ASSERT(FALSE);
+                }
             }
         }
     }
@@ -8046,7 +8047,9 @@ void CMainFrame::OnUpdateViewNavigation(CCmdUI* pCmdUI)
 
 void CMainFrame::OnViewCapture()
 {
+    const bool bHiding = m_controls.ControlChecked(CMainFrameControls::Panel::CAPTURE);
     m_controls.ToggleControl(CMainFrameControls::Panel::CAPTURE);
+    AfxGetAppSettings().bHideCaptureSettings = bHiding;
 }
 
 void CMainFrame::OnUpdateViewCapture(CCmdUI* pCmdUI)

@@ -2848,13 +2848,15 @@ void CMainFrame::OnABRepeat(UINT nID) {
 }
 
 void CMainFrame::PerformABRepeat() {
-    ULONGLONG tcnow = GetTickCount64();
-    if (tcnow > abRepeat.tcLastRepeat + 500ULL) {
-        abRepeat.tcLastRepeat = tcnow;
-    } else {
-        // prevent endless loop
-        DisableABRepeat();
-        return;
+    if (!m_fShockwaveGraph) {
+        ULONGLONG tcnow = GetTickCount64();
+        if (tcnow > abRepeat.tcLastRepeat + 500ULL) {
+            abRepeat.tcLastRepeat = tcnow;
+        } else {
+            // prevent endless loop
+            DisableABRepeat();
+            return;
+        }
     }
 
     DoSeekTo(abRepeat.positionA, false);

@@ -502,7 +502,7 @@ private:
     CAutoPtr<SkypeMoodMsgHandler> m_pSkypeMoodMsgHandler;
     void SendNowPlayingToSkype();
 
-    MLS m_eMediaLoadState;
+    volatile MLS m_eMediaLoadState;
     OAFilterState m_CachedFilterState;
 
     bool m_bSettingUpMenus;

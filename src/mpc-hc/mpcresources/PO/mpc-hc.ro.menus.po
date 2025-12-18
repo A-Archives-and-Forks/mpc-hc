@@ -289,7 +289,7 @@ msgstr "L&uminoasă (2.2 Gamma)"
 
 msgctxt "ID_VIEW_CM_AMBIENTLIGHT_DIM"
 msgid "&Dim (2.35 Gamma)"
-msgstr "&Estompată (2.35 Gamma)"
+msgstr "Pali&dă (2.35 Gamma)"
 
 msgctxt "ID_VIEW_CM_AMBIENTLIGHT_DARK"
 msgid "D&ark (2.4 Gamma)"
@@ -353,7 +353,7 @@ msgstr "Curăță GPU-ul &după prezentare"
 
 msgctxt "ID_VIEW_FLUSHGPU_WAIT"
 msgid "&Wait for flushes"
-msgstr "&Așteaptă după curățări"
+msgstr "&Așteaptă după eliberări de memorie"
 
 msgctxt "POPUP"
 msgid "R&eset"
@@ -798,7 +798,7 @@ msgstr "Caută act&ualizări"
 
 msgctxt "ID_HELP_SHOWCOMMANDLINESWITCHES"
 msgid "&Command Line Switches"
-msgstr "&Comutatoare pentru linia de comandă"
+msgstr "&Comutatoare pentru linia de comandă (pentru CLI)"
 
 msgctxt "ID_HELP_TOOLBARIMAGES"
 msgid "Download &Toolbar Images"

@@ -2,7 +2,6 @@
 #include "DpiAwareResizableDialog.h"
 #include "CMPCThemeUtil.h"
 #include "mplayerc.h"
-#include "ClaudeTrace.h"
 #include "CMPCThemePlayerListCtrl.h"
 
 // ResizableLib constants (copied from ResizableWndState.cpp:42-43)

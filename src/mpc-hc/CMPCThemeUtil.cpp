@@ -246,14 +246,14 @@ LRESULT CALLBACK wndProcFileDialog(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 }
 
 void CMPCThemeUtil::subClassFileDialogWidgets(HWND widget, HWND parent, wchar_t* childWindowClass) {
-    if (0 == wcsicmp(childWindowClass, WC_STATIC)) {
+    if (0 == _wcsicmp(childWindowClass, WC_STATIC)) {
         CWnd* c = CWnd::FromHandle(widget);
         c->UnsubclassWindow();
         CMPCThemeStatic* pObject = DEBUG_NEW CMPCThemeStatic();
         pObject->setFileDialogChild(true);
         allocatedWindows.push_back(pObject);
         pObject->SubclassWindow(widget);
-    } else if (0 == wcsicmp(childWindowClass, WC_BUTTON)) {
+    } else if (0 == _wcsicmp(childWindowClass, WC_BUTTON)) {
         CWnd* c = CWnd::FromHandle(widget);
         DWORD style = c->GetStyle();
         DWORD buttonType = (style & BS_TYPEMASK);
@@ -264,7 +264,7 @@ void CMPCThemeUtil::subClassFileDialogWidgets(HWND widget, HWND parent, wchar_t*
             allocatedWindows.push_back(pObject);
             pObject->SubclassWindow(widget);
         }
-    } else if (0 == wcsicmp(childWindowClass, WC_EDIT)) {
+    } else if (0 == _wcsicmp(childWindowClass, WC_EDIT)) {
         CWnd* c = CWnd::FromHandle(widget);
         c->UnsubclassWindow();
         CMPCThemeEdit* pObject = DEBUG_NEW CMPCThemeEdit();
@@ -303,7 +303,7 @@ void CMPCThemeUtil::subClassFileDialogRecurse(CWnd* wnd, HWND hWnd, FileDialogWi
         WCHAR childWindowClass[MAX_PATH];
         ::GetClassName(pChild, childWindowClass, _countof(childWindowClass));
         if (searchType == RecurseSinkWidgets) {
-            if (0 == wcsicmp(childWindowClass, L"FloatNotifySink")) { //children are the injected controls
+            if (0 == _wcsicmp(childWindowClass, L"FloatNotifySink")) { //children are the injected controls
                 subClassFileDialogRecurse(wnd, pChild, ThemeAllChildren); //recurse and theme all children of sink
             }
         } else if (searchType == ThemeAllChildren) {
@@ -311,7 +311,7 @@ void CMPCThemeUtil::subClassFileDialogRecurse(CWnd* wnd, HWND hWnd, FileDialogWi
         } else if (searchType == ProminentControlIDWidget){
             WCHAR str[MAX_PATH];
             ::GetWindowText(pChild, str, _countof(str));
-            if (0 == wcsicmp(str, ResStr(dialogProminentControlStringID))) {
+            if (0 == _wcsicmp(str, ResStr(dialogProminentControlStringID))) {
                 subClassFileDialogWidgets(pChild, hWnd, childWindowClass);
                 return;
             }

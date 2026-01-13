@@ -19327,6 +19327,9 @@ void CMainFrame::OpenMedia(CAutoPtr<OpenMediaData> pOMD)
 
 bool CMainFrame::ResetDevice()
 {
+    if (USE_LOGGER(AfxGetAppSettings())) {
+        PLAYER_LOG(_T("CMainFrame::ResetDevice"));
+    }
     if (m_pCAP2_preview) {
         m_pCAP2_preview->ResetDevice();
     }
@@ -19338,6 +19341,9 @@ bool CMainFrame::ResetDevice()
 
 bool CMainFrame::DisplayChange()
 {
+    if (USE_LOGGER(AfxGetAppSettings())) {
+        PLAYER_LOG(_T("CMainFrame::DisplayChange"));
+    }
     if (m_pCAP2_preview) {
         m_pCAP2_preview->DisplayChange();
     }
@@ -21496,6 +21502,10 @@ UINT CMainFrame::OnPowerBroadcast(UINT nPowerEvent, LPARAM nEventData)
 {
     static BOOL bWasPausedBeforeSuspention;
 
+    if (USE_LOGGER(AfxGetAppSettings())) {
+        PLAYER_LOG(_T("CMainFrame::OnPowerBroadcast"));
+    }
+
     switch (nPowerEvent) {
         case PBT_APMSUSPEND:            // System is suspending operation.
             TRACE(_T("OnPowerBroadcast - suspending\n"));   // For user tracking
@@ -21526,7 +21536,12 @@ UINT CMainFrame::OnPowerBroadcast(UINT nPowerEvent, LPARAM nEventData)
 
 void CMainFrame::OnSessionChange(UINT nSessionState, UINT nId)
 {
-    if (AfxGetAppSettings().bLockNoPause) {
+    const auto& s = AfxGetAppSettings();
+    if (USE_LOGGER(s)) {
+        PLAYER_LOG(_T("CMainFrame::OnSessionChange"));
+    }
+
+    if (s.bLockNoPause) {
         return;
     }
 

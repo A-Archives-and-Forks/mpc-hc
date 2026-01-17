@@ -19618,7 +19618,7 @@ void CMainFrame::CloseMedia(bool bNextIsQueued/* = false*/, bool bPendingFileDel
                     if (tckill > cur) {
                         waitdur = tckill - cur;
                     } else {
-                        if (extendedwait || m_fFullScreen) {
+                        if (extendedwait || m_fFullScreen || s.hMasterWnd) {
                             processmsg = false;
                         } else {
                             CString msg;
@@ -19751,7 +19751,7 @@ void CMainFrame::CloseMedia(bool bNextIsQueued/* = false*/, bool bPendingFileDel
                 if (tckill > cur) {
                     waitdur = tckill - cur;
                 } else {
-                    if (extendedwait || m_fFullScreen) {
+                    if (extendedwait || m_fFullScreen || s.hMasterWnd) {
                         processmsg = false;
                     } else {
                         CString msg;

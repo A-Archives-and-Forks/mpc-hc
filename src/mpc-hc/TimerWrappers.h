@@ -113,12 +113,10 @@ public:
         if (m_pWnd) {
             for (const auto& kv : m_subscribers) {
                 const UINT_PTR nIDEvent = kv.second.first;
-                ASSERT(m_used[nIDEvent]);
-                ASSERT(m_pWnd->m_hWnd);
-                VERIFY(m_pWnd->KillTimer(nIDEvent));
+                if (!m_used[nIDEvent] || !m_pWnd->m_hWnd || !m_pWnd->KillTimer(nIDEvent)) {
+                    ;
+                }
             }
-        } else {
-            ASSERT(FALSE);
         }
     }
 

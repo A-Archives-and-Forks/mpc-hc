@@ -3398,8 +3398,6 @@ LRESULT CMainFrame::OnGraphNotify(WPARAM wParam, LPARAM lParam)
                 UpdateCachedMediaState();
                 TRACE(_T("Unhandled graph event\n"));
         }
-    } else {
-        ASSERT(false);
     }
 
     if (!AfxGetMyApp()->m_fClosingState) {
@@ -12589,6 +12587,7 @@ void CMainFrame::MoveVideoWindow(bool fShowStats/* = false*/, bool bSetStoppedVi
 
         if (m_pCAP) {
             m_pCAP->SetPosition(windowRect, videoRect);
+            UpdateSubtitleColorInfo();
             UpdateSubtitleRenderingParameters();
         } else  {
             if (m_pBV) {
@@ -18047,13 +18046,14 @@ void CMainFrame::UpdateSubtitleColorInfo()
     }
 
     // store video mediatype, so colorspace information can be extracted when present
-    // FIXME: mediatype extended colorinfo may be absent on initial connection, call this again after first frame has been decoded?
-    CComQIPtr<IBaseFilter> pBF = m_pCAP;
-    CComPtr<IPin> pPin = GetFirstPin(pBF);
-    if (pPin) {
-        AM_MEDIA_TYPE mt;
-        if (SUCCEEDED(pPin->ConnectionMediaType(&mt))) {
-            m_pCAP->SetVideoMediaType(CMediaType(mt));
+    IBaseFilter* pBF = FindFilter(GUID_LAVVideo, m_pGB);
+    if (pBF) {
+        CComPtr<IPin> pPin = GetFirstPin(pBF, PINDIR_OUTPUT);
+        if (pPin) {
+            AM_MEDIA_TYPE mt;
+            if (SUCCEEDED(pPin->ConnectionMediaType(&mt))) {
+                m_pCAP->SetVideoMediaType(CMediaType(mt));
+            }
         }
     }
 
@@ -18117,12 +18117,8 @@ void CMainFrame::SetSubtitle(const SubtitleInput& subInput, bool skip_lcid /* = 
 
         m_pCurrentSubInput = subInput;
 
+        UpdateSubtitleColorInfo();
         UpdateSubtitleRenderingParameters();
-
-        if (firstuse) {
-            // note: can deadlock when calling ConnectionMediaType() with MPCVR when SubPicProvider!=nullptr
-            UpdateSubtitleColorInfo();
-        }
 
         if (!skip_lcid) {
             LCID lcid = 0;

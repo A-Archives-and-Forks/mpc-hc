@@ -19581,7 +19581,7 @@ void CMainFrame::CloseMedia(bool bNextIsQueued/* = false*/, bool bPendingFileDel
             m_pGB_preview->Abort();
         }
 
-        if (m_bOpenedThroughThread) {
+        if (m_bOpenedThroughThread && m_pGraphThread && m_pGraphThread->m_hThread) {
             BeginWaitCursor();
             MSG msg;
             DWORD dwWait;
@@ -19620,6 +19620,7 @@ void CMainFrame::CloseMedia(bool bNextIsQueued/* = false*/, bool bPendingFileDel
                         break;
                 }
                 if (processmsg) {
+                    ASSERT(m_pGB || m_pGB_preview);
                     ULONGLONG cur = GetTickCount64();
                     if (tckill > cur) {
                         waitdur = tckill - cur;

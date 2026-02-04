@@ -2970,9 +2970,11 @@ LRESULT CMainFrame::OnGraphNotify(WPARAM wParam, LPARAM lParam)
         return S_OK;
     }
     if (AfxGetMyApp()->m_fClosingState) {
+        ASSERT(false);
         return S_OK;
     }
     if (!m_pME || lParam != (LPARAM)m_pME.p) {
+        ASSERT(false);
         return S_OK;
     }
     if (m_fOpeningAborted || m_eMediaLoadState != MLS::LOADED && m_eMediaLoadState != MLS::LOADING) {
@@ -3403,7 +3405,9 @@ LRESULT CMainFrame::OnGraphNotify(WPARAM wParam, LPARAM lParam)
 
     if (!AfxGetMyApp()->m_fClosingState) {
         lockGraphAccess.Unlock();
-    }    
+    } else {
+        ASSERT(false);
+    }
 
     return hr;
 }

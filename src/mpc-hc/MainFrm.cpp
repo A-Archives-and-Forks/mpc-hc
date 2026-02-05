@@ -2360,14 +2360,6 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
                     }
                     m_wndStatsBar.SetLine(StrRes(IDS_AG_FRAMERATE), info);
 
-                    if (SUCCEEDED(m_pQP->get_AvgSyncOffset(&tmp))
-                        && SUCCEEDED(m_pQP->get_DevSyncOffset(&tmp1))) {
-                        info.Format(IDS_STATSBAR_SYNC_OFFSET_FORMAT, tmp, tmp1);
-                    } else {
-                        info = _T("-");
-                    }
-                    m_wndStatsBar.SetLine(StrRes(IDS_STATSBAR_SYNC_OFFSET), info);
-
                     if (SUCCEEDED(m_pQP->get_FramesDrawn(&tmp))
                         && SUCCEEDED(m_pQP->get_FramesDroppedInRenderer(&tmp1))) {
                         info.Format(IDS_MAINFRM_6, tmp, tmp1);
@@ -2376,12 +2368,22 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
                     }
                     m_wndStatsBar.SetLine(StrRes(IDS_AG_FRAMES), info);
 
-                    if (SUCCEEDED(m_pQP->get_Jitter(&tmp))) {
-                        info.Format(_T("%d ms"), tmp);
-                    } else {
-                        info = _T("-");
+                    if (s.iDSVideoRendererType != VIDRNDT_DS_MADVR && s.iDSVideoRendererType != VIDRNDT_DS_EVR && s.iDSVideoRendererType != VIDRNDT_DS_SYNC) {
+                        if (SUCCEEDED(m_pQP->get_AvgSyncOffset(&tmp))
+                            && SUCCEEDED(m_pQP->get_DevSyncOffset(&tmp1))) {
+                            info.Format(IDS_STATSBAR_SYNC_OFFSET_FORMAT, tmp, tmp1);
+                        } else {
+                            info = _T("-");
+                        }
+                        m_wndStatsBar.SetLine(StrRes(IDS_STATSBAR_SYNC_OFFSET), info);
+
+                        if (SUCCEEDED(m_pQP->get_Jitter(&tmp))) {
+                            info.Format(_T("%d ms"), tmp);
+                        } else {
+                            info = _T("-");
+                        }
+                        m_wndStatsBar.SetLine(StrRes(IDS_STATSBAR_JITTER), info);
                     }
-                    m_wndStatsBar.SetLine(StrRes(IDS_STATSBAR_JITTER), info);
                 } else {
                     m_wndStatsBar.SetLine(StrRes(IDS_STATSBAR_PLAYBACK_RATE), rate);
                 }
@@ -14996,10 +14998,13 @@ void CMainFrame::OpenSetupStatsBar()
         EndEnumFilters;
 
         if (m_pQP) {
+            CAppSettings& s = AfxGetAppSettings();
             m_wndStatsBar.SetLine(StrRes(IDS_AG_FRAMERATE), info);
-            m_wndStatsBar.SetLine(StrRes(IDS_STATSBAR_SYNC_OFFSET), info);
             m_wndStatsBar.SetLine(StrRes(IDS_AG_FRAMES), info);
-            m_wndStatsBar.SetLine(StrRes(IDS_STATSBAR_JITTER), info);
+            if (s.iDSVideoRendererType != VIDRNDT_DS_MADVR && s.iDSVideoRendererType != VIDRNDT_DS_EVR && s.iDSVideoRendererType != VIDRNDT_DS_SYNC) {
+                m_wndStatsBar.SetLine(StrRes(IDS_STATSBAR_SYNC_OFFSET), info);
+                m_wndStatsBar.SetLine(StrRes(IDS_STATSBAR_JITTER), info);
+            }
         } else {
             m_wndStatsBar.SetLine(StrRes(IDS_STATSBAR_PLAYBACK_RATE), info);
         }

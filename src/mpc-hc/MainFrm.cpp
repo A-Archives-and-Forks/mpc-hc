@@ -9426,6 +9426,16 @@ void CMainFrame::KillTimersStop()
     KillTimer(TIMER_STREAMPOSPOLLER);
     KillTimer(TIMER_STATS);
     m_timerOneTime.Unsubscribe(TimerOneTimeSubscriber::DVBINFO_UPDATE);
+
+    MSG msg;
+    int pm = 0;
+    while ((pm++ < 5) && PeekMessage(&msg, nullptr, WM_TIMER, WM_TIMER, PM_REMOVE)) {
+        if (msg.wParam == TIMER_STREAMPOSPOLLER || msg.wParam == TIMER_STREAMPOSPOLLER2 || msg.wParam == TIMER_STATS || msg.wParam == TIMER_DELAYEDSEEK) {
+            TRACE(L"Purged WM_TIMER during stop, wParam=%u\n", msg.wParam);
+        } else {
+            DispatchMessage(&msg);
+        }
+    }
 }
 
 void CMainFrame::OnPlaySeekKey(UINT nID)

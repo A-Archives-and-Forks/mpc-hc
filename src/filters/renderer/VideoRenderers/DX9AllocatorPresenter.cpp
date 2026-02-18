@@ -544,16 +544,34 @@ HRESULT CDX9AllocatorPresenter::CreateDevice(CString& _Error)
         return E_UNEXPECTED;
     }
 
-    UINT currentAdapter = GetAdapter(m_pD3D);
-    bool bTryToReset = (currentAdapter == m_CurrentAdapter);
+    HRESULT hr = S_OK;
 
-    if (!bTryToReset) {
-        m_pD3DDev = nullptr;
-        m_pD3DDevEx = nullptr;
-        m_CurrentAdapter = currentAdapter;
+    if (m_pD3DDevEx) {
+        hr = m_pD3DDevEx->CheckDeviceState(NULL);
+        if (hr == D3DERR_DEVICELOST || hr == D3DERR_DEVICEREMOVED || hr == D3DERR_DEVICEHUNG || hr == D3DERR_OUTOFVIDEOMEMORY) {
+            m_pD3DDevEx.Release();
+            m_pD3DDev.Release();
+            m_pD3DEx.Release();
+            m_pD3D.Release();
+            Direct3DCreate9Ex(D3D_SDK_VERSION, &m_pD3DEx);
+            if (m_pD3DEx) {
+                m_pD3D = m_pD3DEx;
+            } else {
+                return E_UNEXPECTED;
+            }
+        } else if (FAILED(hr)) {
+            m_pD3DDevEx.Release();
+            m_pD3DDev.Release();
+        }
     }
 
-    HRESULT hr = S_OK;
+    UINT currentAdapter = GetAdapter(m_pD3D);
+    bool bTryToReset = (currentAdapter == m_CurrentAdapter);
+    if (!bTryToReset) {
+        m_pD3DDev.Release();
+        m_pD3DDevEx.Release();
+        m_CurrentAdapter = currentAdapter;
+    }
 
     //#define ENABLE_DDRAWSYNC
 #ifdef ENABLE_DDRAWSYNC
@@ -648,7 +666,7 @@ HRESULT CDX9AllocatorPresenter::CreateDevice(CString& _Error)
 
             bTryToReset = bTryToReset && m_pD3DDevEx;
             if (bTryToReset) {
-                if (FAILED(m_pD3DDevEx->CheckDeviceState(NULL)) || FAILED(hr = m_pD3DDevEx->ResetEx(&pp, &DisplayMode))) {
+                if (FAILED(hr = m_pD3DDevEx->ResetEx(&pp, &DisplayMode))) {
                     bTryToReset = false;
                 } 
             }
@@ -660,6 +678,9 @@ HRESULT CDX9AllocatorPresenter::CreateDevice(CString& _Error)
                          m_CurrentAdapter, D3DDEVTYPE_HAL, m_hFocusWindow,
                          GetVertexProcessing() | D3DCREATE_FPU_PRESERVE | D3DCREATE_MULTITHREADED | D3DCREATE_ENABLE_PRESENTSTATS | D3DCREATE_NOWINDOWCHANGES, //D3DCREATE_MANAGED
                          &pp, &DisplayMode, &m_pD3DDevEx);
+                if (m_pD3DDevEx) {
+                    m_pD3DDev = m_pD3DDevEx;
+                }
             }
 
             if (FAILED(hr)) {
@@ -669,7 +690,6 @@ HRESULT CDX9AllocatorPresenter::CreateDevice(CString& _Error)
             }
 
             if (m_pD3DDevEx) {
-                m_pD3DDev = m_pD3DDevEx;
                 m_BackbufferType = pp.BackBufferFormat;
                 m_DisplayType = DisplayMode.Format;
             }
@@ -738,7 +758,7 @@ HRESULT CDX9AllocatorPresenter::CreateDevice(CString& _Error)
 
             bTryToReset = bTryToReset && m_pD3DDevEx;
             if (bTryToReset) {
-                if (FAILED(m_pD3DDevEx->CheckDeviceState(NULL)) || FAILED(hr = m_pD3DDevEx->ResetEx(&pp, nullptr))) {
+                if (FAILED(hr = m_pD3DDevEx->ResetEx(&pp, nullptr))) {
                     bTryToReset = false;
                 } 
             }
@@ -752,9 +772,11 @@ HRESULT CDX9AllocatorPresenter::CreateDevice(CString& _Error)
                          m_CurrentAdapter, D3DDEVTYPE_HAL, m_hFocusWindow,
                          GetVertexProcessing() | D3DCREATE_FPU_PRESERVE | D3DCREATE_MULTITHREADED | D3DCREATE_ENABLE_PRESENTSTATS, //D3DCREATE_MANAGED
                          &pp, nullptr, &m_pD3DDevEx);
+                if (m_pD3DDevEx) {
+                    m_pD3DDev = m_pD3DDevEx;
+                }
             }
             if (m_pD3DDevEx) {
-                m_pD3DDev = m_pD3DDevEx;
                 m_DisplayType = DisplayMode.Format;
             }
         }

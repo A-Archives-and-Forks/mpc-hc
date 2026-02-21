@@ -21208,7 +21208,17 @@ HRESULT CMainFrame::CreateThumbnailToolbar()
         return E_FAIL;
     }
 
-    if (m_pTaskbarList || SUCCEEDED(m_pTaskbarList.CoCreateInstance(CLSID_TaskbarList, nullptr, CLSCTX_INPROC_SERVER))) {
+    if (!m_pTaskbarList) {
+        if (SUCCEEDED(m_pTaskbarList.CoCreateInstance(CLSID_TaskbarList, nullptr, CLSCTX_INPROC_SERVER))) {
+            if (FAILED(m_pTaskbarList->HrInit())) {
+                m_pTaskbarList.Release();
+                AfxGetAppSettings().bUseEnhancedTaskBar = false;
+                return E_FAIL;
+            }
+        }
+    }
+
+    if (m_pTaskbarList) {
         bool bRTLLayout = false; // Assume left-to-right layout by default
         // Try to locate the window used to display the task bar
         if (CWnd* pTaskBarWnd = FindWindow(_T("TaskListThumbnailWnd"), nullptr)) {

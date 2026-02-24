@@ -823,7 +823,7 @@ CMainFrame::CMainFrame()
     , m_rtStepForwardStart(0)
     , m_nVolumeBeforeFrameStepping(0)
     , m_fEndOfStream(false)
-    , m_dwLastPause(0)
+    , m_dwLastPause(0ULL)
     , m_rtReloadPos(0)
     , m_iReloadAudioIdx(-1)
     , m_iReloadSubIdx(-1)
@@ -8896,10 +8896,9 @@ void CMainFrame::OnPlayPlay()
             if (m_fEndOfStream) {
                 SendMessage(WM_COMMAND, ID_PLAY_STOP);
             } else {
-                if (!m_fAudioOnly && m_dwLastPause && m_wndSeekBar.HasDuration() && s.iReloadAfterLongPause >= 0) {
-                    // after long pause or hibernation, reload video file to avoid playback issues on some systems (with buggy drivers)
-                    // in case of hibernate, m_dwLastPause equals 1
-                    if (m_dwLastPause == 1 || s.iReloadAfterLongPause > 0 && (GetTickCount64() - m_dwLastPause >= s.iReloadAfterLongPause * 60 * 1000)) {
+                if (!m_fAudioOnly && m_dwLastPause && m_wndSeekBar.HasDuration() && s.iReloadAfterLongPause > 0) {
+                    // after long pause reload video file to avoid playback issues on some systems (with buggy drivers)
+                    if (GetTickCount64() - m_dwLastPause >= s.iReloadAfterLongPause * 60 * 1000ULL) {
                         m_rtReloadPos = m_wndSeekBar.GetPos();
                         reloadABRepeat = abRepeat;
                         m_iReloadAudioIdx = GetCurrentAudioTrackIdx();
@@ -11784,7 +11783,7 @@ OAFilterState CMainFrame::UpdateCachedMediaState()
 
 bool CMainFrame::MediaControlRun(bool waitforcompletion)
 {
-    m_dwLastPause = 0;
+    m_dwLastPause = 0ULL;
     if (m_pMC) {
         m_CachedFilterState = State_Running;
         if (FAILED(m_pMC->Run())) {
@@ -11822,7 +11821,7 @@ bool CMainFrame::MediaControlPause(bool waitforcompletion)
 
 bool CMainFrame::MediaControlStop(bool waitforcompletion)
 {
-    m_dwLastPause = 0;
+    m_dwLastPause = 0ULL;
     if (m_pMC) {
         m_pMC->GetState(0, &m_CachedFilterState);
         if (m_CachedFilterState != State_Stopped) {
@@ -19456,7 +19455,8 @@ void CMainFrame::CloseMedia(bool bNextIsQueued/* = false*/, bool bPendingFileDel
 
     auto& s = AfxGetAppSettings();
 
-    m_dwLastPause = 0;
+    bool hibernating = (m_dwLastPause == 1ULL);
+    m_dwLastPause = 0ULL;
 
     if (m_bUseSeekPreview && m_wndPreView.IsWindowVisible()) {
         m_wndPreView.ShowWindow(SW_HIDE);
@@ -19677,7 +19677,7 @@ void CMainFrame::CloseMedia(bool bNextIsQueued/* = false*/, bool bPendingFileDel
                     if (tckill > cur) {
                         waitdur = tckill - cur;
                     } else {
-                        if (extendedwait || m_fFullScreen || s.hMasterWnd) {
+                        if (extendedwait || m_fFullScreen || s.hMasterWnd || hibernating) {
                             processmsg = false;
                         } else {
                             CString timeoutmsg;
@@ -19814,7 +19814,7 @@ void CMainFrame::CloseMedia(bool bNextIsQueued/* = false*/, bool bPendingFileDel
                 if (tckill > cur) {
                     waitdur = tckill - cur;
                 } else {
-                    if (extendedwait || m_fFullScreen || s.hMasterWnd) {
+                    if (extendedwait || m_fFullScreen || s.hMasterWnd || hibernating) {
                         processmsg = false;
                     } else {
                         CString timeoutmsg;
@@ -21613,23 +21613,33 @@ UINT CMainFrame::OnPowerBroadcast(UINT nPowerEvent, LPARAM nEventData)
 
     switch (nPowerEvent) {
         case PBT_APMSUSPEND:            // System is suspending operation.
-            TRACE(_T("OnPowerBroadcast - suspending\n"));   // For user tracking
-            bWasPausedBeforeSuspention = FALSE;             // Reset value
+            TRACE(_T("OnPowerBroadcast - suspending\n"));
+            bWasPausedBeforeSuspention = FALSE;
 
-            if (GetMediaStateDirect() == State_Running) {
-                bWasPausedBeforeSuspention = TRUE;
-                SendMessage(WM_COMMAND, ID_PLAY_PAUSE);     // Pause
+            if (GetLoadState() == MLS::LOADED) {
+                if (AfxGetAppSettings().iReloadAfterLongPause >= 0) {
+                    // save position and close
+                    m_rtReloadPos = m_wndSeekBar.GetPos();
+                    reloadABRepeat = abRepeat;
+                    m_iReloadAudioIdx = GetCurrentAudioTrackIdx();
+                    m_iReloadSubIdx = GetCurrentSubtitleTrackIdx();
+                    m_dwLastPause = 1ULL; // used as hibernation signal
+                    SendMessage(WM_COMMAND, ID_FILE_CLOSEMEDIA);
+                } else if (GetMediaStateDirect() == State_Running) {
+                    bWasPausedBeforeSuspention = TRUE;
+                    SendMessage(WM_COMMAND, ID_PLAY_PAUSE);
+                }
+            } else if (GetLoadState() == MLS::LOADING) {
+                m_dwLastPause = 1ULL; // used as hibernation signal
+                SendMessage(WM_COMMAND, ID_FILE_CLOSEMEDIA);
             }
             break;
         case PBT_APMRESUMESUSPEND:     // System is resuming operation
-            TRACE(_T("OnPowerBroadcast - resuming\n"));     // For user tracking
-
-            // force seek to current position when resuming playback to re-initialize the video decoder
-            m_dwLastPause = 1;
+            TRACE(_T("OnPowerBroadcast - resuming\n"));
 
             // Resume if we paused before suspension.
             if (bWasPausedBeforeSuspention) {
-                SendMessage(WM_COMMAND, ID_PLAY_PLAY);      // Resume
+                PostMessage(WM_COMMAND, ID_PLAY_PLAY);
             }
             break;
     }

@@ -824,7 +824,7 @@ CMainFrame::CMainFrame()
     , m_nVolumeBeforeFrameStepping(0)
     , m_fEndOfStream(false)
     , m_dwLastPause(0ULL)
-    , m_rtReloadPos(0)
+    , m_rtReloadPos(-1)
     , m_iReloadAudioIdx(-1)
     , m_iReloadSubIdx(-1)
     , m_bRememberFilePos(false)
@@ -4319,7 +4319,7 @@ LRESULT CMainFrame::OnOpenMediaFailed(WPARAM wParam, LPARAM lParam)
     m_bOpenMediaActive = false;
     m_OpenMediaFailedCount++;
 
-    m_rtReloadPos = 0;
+    m_rtReloadPos = -1;
     reloadABRepeat = ABRepeat();
     m_iReloadAudioIdx = -1;
     m_iReloadSubIdx = -1;
@@ -5335,11 +5335,8 @@ void CMainFrame::OnFileReopen()
 
     // save playback position
     if (GetLoadState() == MLS::LOADED) {
-        if (m_bRememberFilePos && !m_fEndOfStream && m_rtReloadPos == 0 && m_pMS) {
-            REFERENCE_TIME rtNow = 0;
-            m_pMS->GetCurrentPosition(&rtNow);
-            m_rtReloadPos = rtNow;
-            s.MRU.UpdateCurrentFilePosition(rtNow, true);
+        if (m_bRememberFilePos && !m_fEndOfStream && m_rtReloadPos == -1 && m_pMS) {
+            m_rtReloadPos = m_wndSeekBar.HasDuration() ? m_wndSeekBar.GetPos() : 0;
         }
         reloadABRepeat = abRepeat;
     }
@@ -13767,6 +13764,13 @@ void CMainFrame::OpenFile(OpenFileData* pOFD)
             break;
         }
         if (bMainFile) {
+            if (m_rtReloadPos >= 0 && fn != lastOpenFile) {
+                // clear info used for reloading
+                m_rtReloadPos = -1;
+                reloadABRepeat = ABRepeat();
+                m_iReloadAudioIdx = -1;
+                m_iReloadSubIdx = -1;
+            }
             // store info, this is used for skipping to next/previous file
             pOFD->title = fn;
             lastOpenFile = fn;
@@ -15854,11 +15858,11 @@ bool CMainFrame::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
                 abRepeat = pFileData->abRepeat;
             }
 
-            if (m_rtReloadPos > 0) {
+            if (m_rtReloadPos >= 0) {
                 if (m_rtReloadPos < rtDur) {
                     rtPos = m_rtReloadPos;
                 }
-                m_rtReloadPos = 0;
+                m_rtReloadPos = -1;
             }
             if (reloadABRepeat) {
                 abRepeat = reloadABRepeat;
@@ -19521,7 +19525,7 @@ void CMainFrame::CloseMedia(bool bNextIsQueued/* = false*/, bool bPendingFileDel
 
         // save playback position
         if (s.fKeepHistory && !bPendingFileDelete) {
-            if (m_bRememberFilePos && !m_fEndOfStream && m_rtReloadPos == 0 && m_pMS) {
+            if (m_bRememberFilePos && !m_fEndOfStream && m_pMS) {
                 REFERENCE_TIME rtNow = 0;
                 m_pMS->GetCurrentPosition(&rtNow);
                 if (rtNow > 0) {
@@ -21619,7 +21623,7 @@ UINT CMainFrame::OnPowerBroadcast(UINT nPowerEvent, LPARAM nEventData)
             if (GetLoadState() == MLS::LOADED) {
                 if (AfxGetAppSettings().iReloadAfterLongPause >= 0) {
                     // save position and close
-                    m_rtReloadPos = m_wndSeekBar.GetPos();
+                    m_rtReloadPos = m_wndSeekBar.HasDuration() ? m_wndSeekBar.GetPos() : 0;
                     reloadABRepeat = abRepeat;
                     m_iReloadAudioIdx = GetCurrentAudioTrackIdx();
                     m_iReloadSubIdx = GetCurrentSubtitleTrackIdx();

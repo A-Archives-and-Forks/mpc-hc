@@ -5360,6 +5360,8 @@ DROPEFFECT CMainFrame::OnDropAccept(COleDataObject* pDataObject, DWORD dwKeyStat
 }
 
 bool CMainFrame::IsImageFile(CStringW fn) {
+    if (fn.IsEmpty()) return false;
+
     CPath path(fn);
     CStringW ext(path.GetExtension());
     return IsImageFileExt(ext);
@@ -14419,7 +14421,12 @@ void CMainFrame::OpenDVD(OpenDVDData* pODD)
 {
     lastOpenFile.Empty();
 
-    HRESULT hr = m_pGB->RenderFile(CStringW(pODD->path), nullptr);
+    CStringW fn = CStringW(pODD->path);
+    HRESULT hr = m_pGB->RenderFile(fn, nullptr);
+
+    if (SUCCEEDED(hr)) {
+        lastOpenFile = fn;
+    }
 
     CAppSettings& s = AfxGetAppSettings();
 

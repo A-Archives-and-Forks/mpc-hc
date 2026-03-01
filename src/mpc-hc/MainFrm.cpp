@@ -2770,7 +2770,9 @@ void CMainFrame::DoAfterPlaybackEvent()
         bExitFullScreen = true;
         LockWorkStation();
     } else if (s.nCLSwitches & CLSW_PLAYNEXT) {
-        if (!SearchInDir(true, (s.fLoopForever || m_nLoops < s.nLoops || s.bLoopFolderOnPlayNextFile))) {
+        if (SearchInDir(true, (s.fLoopForever || m_nLoops < s.nLoops || s.bLoopFolderOnPlayNextFile))) {
+            PostMessage(WM_MPC_OPENCURPLAYLIST, 0, 0);
+        } else {
             m_fEndOfStream = true;
             bExitFullScreen = true;
             bNoMoreMedia = true;
@@ -2780,7 +2782,9 @@ void CMainFrame::DoAfterPlaybackEvent()
         switch (s.eAfterPlayback) {
             case CAppSettings::AfterPlayback::PLAY_NEXT:
                 if (m_wndPlaylistBar.GetCount() < 2) { // ignore global PLAY_NEXT in case of a playlist
-                    if (!SearchInDir(true, s.bLoopFolderOnPlayNextFile)) {
+                    if (SearchInDir(true, s.bLoopFolderOnPlayNextFile)) {
+                        PostMessage(WM_MPC_OPENCURPLAYLIST, 0, 0);
+                    } else {
                         PostMessage(WM_COMMAND, ID_FILE_CLOSE_AND_RESTORE);
                     }
                 }
@@ -10878,11 +10882,15 @@ void CMainFrame::OnNavigateSkipFile(UINT nID)
                 }
 
                 if (nID == ID_NAVIGATE_SKIPBACKFILE) {
-                    if (!SearchInDir(false, s.bLoopFolderOnPlayNextFile)) {
+                    if (SearchInDir(false, s.bLoopFolderOnPlayNextFile)) {
+                        OpenCurPlaylistItem();
+                    } else {
                         m_OSD.DisplayMessage(OSD_TOPLEFT, ResStr(IDS_FIRST_IN_FOLDER));
                     }
                 } else if (nID == ID_NAVIGATE_SKIPFORWARDFILE) {
-                    if (!SearchInDir(true, s.bLoopFolderOnPlayNextFile)) {
+                    if (SearchInDir(true, s.bLoopFolderOnPlayNextFile)) {
+                        OpenCurPlaylistItem();
+                    } else {
                         m_OSD.DisplayMessage(OSD_TOPLEFT, ResStr(IDS_LAST_IN_FOLDER));
                     }
                 }
@@ -16363,7 +16371,6 @@ bool CMainFrame::SearchInDir(bool bDirForward, bool bLoop /*= false*/)
     CAtlList<CString> sl;
     sl.AddHead(*current);
     m_wndPlaylistBar.Open(sl, false);
-    PostMessage(WM_MPC_OPENCURPLAYLIST, 0, 0);
 
     return true;
 }

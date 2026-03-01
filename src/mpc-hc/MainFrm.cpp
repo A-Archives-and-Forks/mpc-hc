@@ -19737,6 +19737,10 @@ void CMainFrame::CloseMedia(bool bNextIsQueued/* = false*/, bool bPendingFileDel
                                 // ignore
                             } else if (msg.message == WM_POSTOPEN || msg.message == WM_OPENFAILED) {
                                 // ignore
+                            } else if (msg.message == WM_OSD_HIDE) {
+                                DispatchMessage(&msg);
+                            } else if (msg.message == WM_OSD_DRAW) {
+                                // ignore
                             } else if (msg.message == WM_CLOSE) {
                                 if (bNextIsQueued) {
                                     processmsg = false;
@@ -19748,7 +19752,7 @@ void CMainFrame::CloseMedia(bool bNextIsQueued/* = false*/, bool bPendingFileDel
                                 // postpone
                                 postponedmsg.AddHead(msg);
                             } else {
-                                if (msg.message != WM_PAINT && msg.message != WM_KEYUP && msg.message != WM_MOUSEMOVE && msg.message != EVENT_OBJECT_VALUECHANGE && msg.message != EVENT_OBJECT_PARENTCHANGE && msg.message != 0xc03e) {
+                                if (msg.message != WM_PAINT && msg.message != WM_KEYUP && msg.message != WM_MOUSEMOVE && msg.message != 0xc03e) {
                                     TRACE(_T("Dispatch WM during graph abort: msg=0x%x wp=%u lp=%ld\n"), msg.message, msg.wParam, msg.lParam);
                                 }
                                 TranslateMessage(&msg);
@@ -19875,6 +19879,10 @@ void CMainFrame::CloseMedia(bool bNextIsQueued/* = false*/, bool bPendingFileDel
                             // ignore
                         } else if (msg.message == WM_GRAPHNOTIFY || msg.message == WM_RESET_DEVICE) {
                             // ignore
+                        } else if (msg.message == WM_OSD_HIDE) {
+                            DispatchMessage(&msg);
+                        } else if (msg.message == WM_OSD_DRAW) {
+                            // ignore
                         } else if (msg.message == WM_CLOSE) {
                             if (bNextIsQueued) {
                                 processmsg = false;
@@ -19886,7 +19894,7 @@ void CMainFrame::CloseMedia(bool bNextIsQueued/* = false*/, bool bPendingFileDel
                             // postpone
                             postponedmsg.AddHead(msg);
                         } else {
-                            if (msg.message != WM_PAINT && msg.message != WM_KEYUP && msg.message != WM_MOUSEMOVE && msg.message != EVENT_OBJECT_VALUECHANGE && msg.message != EVENT_OBJECT_PARENTCHANGE && msg.message != 0xc03e) {
+                            if (msg.message != WM_PAINT && msg.message != WM_KEYUP && msg.message != WM_MOUSEMOVE && msg.message != 0xc03e) {
                                 TRACE(_T("Dispatch WM during graph close: msg=0x%x wp=%u lp=%ld\n"), msg.message, msg.wParam, msg.lParam);
                             }
                             TranslateMessage(&msg);

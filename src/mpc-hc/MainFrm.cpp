@@ -1279,19 +1279,20 @@ void CMainFrame::OnClose()
         CloseMedia();
     }
 
-#if USE_DRDUMP_CRASH_REPORTER & (MPC_VERSION_REV >= 10)
-    if (GetLoadState() != MLS::CLOSED) {
-        throw 1;
-    }
-#endif
-
-    ASSERT(GetLoadState() == MLS::CLOSED);
-    ASSERT(!m_bOpenMediaActive);
-
     s.WinLircClient.DisConnect();
     s.UIceClient.DisConnect();
 
     SendAPICommand(CMD_DISCONNECT, L"\0");  // according to CMD_NOTIFYENDOFSTREAM (ctrl+f it here), you're not supposed to send NULL here
+
+    ASSERT(!m_bOpenMediaActive);
+
+    if (GetLoadState() != MLS::CLOSED) {
+#if USE_DRDUMP_CRASH_REPORTER & (MPC_VERSION_REV >= 10)
+        throw 1;
+#else
+        ForceCloseProcess();
+#endif
+    }   
 
     {
         CAutoLock ga(&lockGraphAccess);
@@ -19736,6 +19737,13 @@ void CMainFrame::CloseMedia(bool bNextIsQueued/* = false*/, bool bPendingFileDel
                                 // ignore
                             } else if (msg.message == WM_POSTOPEN || msg.message == WM_OPENFAILED) {
                                 // ignore
+                            } else if (msg.message == WM_CLOSE) {
+                                if (bNextIsQueued) {
+                                    processmsg = false;
+                                } else {
+                                    // postpone
+                                    postponedmsg.AddHead(msg);
+                                }
                             } else if (msg.message == WM_SYSCOMMAND || msg.message == WM_APPCOMMAND || msg.message == WM_DISPLAYCHANGE || msg.message >= WM_APP && msg.message < WM_APP + 100) {
                                 // postpone
                                 postponedmsg.AddHead(msg);
@@ -19867,6 +19875,13 @@ void CMainFrame::CloseMedia(bool bNextIsQueued/* = false*/, bool bPendingFileDel
                             // ignore
                         } else if (msg.message == WM_GRAPHNOTIFY || msg.message == WM_RESET_DEVICE) {
                             // ignore
+                        } else if (msg.message == WM_CLOSE) {
+                            if (bNextIsQueued) {
+                                processmsg = false;
+                            } else {
+                                // postpone
+                                postponedmsg.AddHead(msg);
+                            }
                         } else if (msg.message == WM_SYSCOMMAND || msg.message == WM_APPCOMMAND || msg.message == WM_DISPLAYCHANGE || msg.message >= WM_APP && msg.message < WM_APP + 100) {
                             // postpone
                             postponedmsg.AddHead(msg);

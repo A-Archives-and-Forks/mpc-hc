@@ -6189,8 +6189,8 @@ void CMainFrame::SaveThumbnails(LPCTSTR fn)
 
     const int margin = 5;
     int width = std::clamp(s.iThumbWidth, 256, 3840);
-    float fontscale = width / 1280.0;
-    int fontsize = fontscale * 16;
+    double fontscale = width / 1280.0;
+    int fontsize = (int)(fontscale * 16);
     const int infoheight = 4 * fontsize + 6 + 2 * margin;
     int height = width * szVideoARCorrected.cy / szVideoARCorrected.cx * rows / cols + infoheight;
 
@@ -9506,7 +9506,7 @@ void CMainFrame::KillTimersStop()
     int pm = 0;
     while ((pm++ < 5) && PeekMessage(&msg, nullptr, WM_TIMER, WM_TIMER, PM_REMOVE)) {
         if (msg.wParam == TIMER_STREAMPOSPOLLER || msg.wParam == TIMER_STREAMPOSPOLLER2 || msg.wParam == TIMER_STATS || msg.wParam == TIMER_DELAYEDSEEK) {
-            TRACE(L"Purged WM_TIMER during stop, wParam=%u\n", msg.wParam);
+            TRACE(L"Purged WM_TIMER during stop, wParam=%PRIu64\n", msg.wParam);
         } else {
             DispatchMessage(&msg);
         }
@@ -10085,12 +10085,12 @@ void CMainFrame::OnPlayAudio(UINT nID)
         } else {
             LONG sidx = i - 1;
             if (m_iReloadAudioIdx >= 0) {
-                if (m_iReloadAudioIdx < cStreams) {
+                if (m_iReloadAudioIdx < (int)cStreams) {
                     sidx = m_iReloadAudioIdx;
                 }
                 m_iReloadAudioIdx = -1;                
             }
-            if (sidx >= cStreams) { //invalid stream?
+            if (sidx >= (int)cStreams) { //invalid stream?
                 return;
             }
             if (SUCCEEDED(m_pAudioSwitcherSS->Enable(sidx, AMSTREAMSELECTENABLE_ENABLE))) {
@@ -11496,7 +11496,7 @@ void CMainFrame::OnRecentFile(UINT nID)
 
     // find corresponding item in MRU list, we can't directly use string from menu because it may have been shortened
     nID -= ID_RECENT_FILE_START;
-    if (nID < MRU.GetSize()) {
+    if (nID < (UINT)MRU.GetSize()) {
         r = MRU[nID];
         fns.AddHeadList(&r.fns);
     } else {
@@ -15608,7 +15608,6 @@ int CMainFrame::SetupSubtitleStreams()
         }
 
         int i = 0;
-        int subcount = m_pSubStreams.GetSize();
         int maxrating = 0;
         POSITION pos = m_pSubStreams.GetHeadPosition();
         while (pos) {
@@ -19731,7 +19730,7 @@ void CMainFrame::CloseMedia(bool bNextIsQueued/* = false*/, bool bPendingFileDel
             bool extendedwait = false;
             int pm = 0;
             while (processmsg) {
-                dwWait = MsgWaitForMultipleObjects(1, &handle, FALSE, waitdur, QS_POSTMESSAGE | QS_SENDMESSAGE);
+                dwWait = MsgWaitForMultipleObjects(1, &handle, FALSE, (DWORD)waitdur, QS_POSTMESSAGE | QS_SENDMESSAGE);
                 switch (dwWait) {
                     case WAIT_OBJECT_0:
                         TRACE(_T("Graph abort successful\n"));
@@ -19767,7 +19766,7 @@ void CMainFrame::CloseMedia(bool bNextIsQueued/* = false*/, bool bPendingFileDel
                                 postponedmsg.AddHead(msg);
                             } else {
                                 if (msg.message != WM_PAINT && msg.message != WM_KEYUP && msg.message != WM_MOUSEMOVE && msg.message != 0xc03e) {
-                                    TRACE(_T("Dispatch WM during graph abort: msg=0x%x wp=%u lp=%ld\n"), msg.message, msg.wParam, msg.lParam);
+                                    TRACE(_T("Dispatch WM during graph abort: msg=0x%x wp=%PRIu64 lp=%ld\n"), msg.message, msg.wParam, msg.lParam);
                                 }
                                 TranslateMessage(&msg);
                                 DispatchMessage(&msg);
@@ -19878,7 +19877,7 @@ void CMainFrame::CloseMedia(bool bNextIsQueued/* = false*/, bool bPendingFileDel
         bool extendedwait = false;
         int pm = 0;
         while (processmsg) {
-            dwWait = MsgWaitForMultipleObjects(1, &handle, FALSE, waitdur, QS_POSTMESSAGE | QS_SENDMESSAGE);
+            dwWait = MsgWaitForMultipleObjects(1, &handle, FALSE, (DWORD)waitdur, QS_POSTMESSAGE | QS_SENDMESSAGE);
             switch (dwWait) {
                 case WAIT_OBJECT_0:
                     processmsg = false; // event received
@@ -19909,7 +19908,7 @@ void CMainFrame::CloseMedia(bool bNextIsQueued/* = false*/, bool bPendingFileDel
                             postponedmsg.AddHead(msg);
                         } else {
                             if (msg.message != WM_PAINT && msg.message != WM_KEYUP && msg.message != WM_MOUSEMOVE && msg.message != 0xc03e) {
-                                TRACE(_T("Dispatch WM during graph close: msg=0x%x wp=%u lp=%ld\n"), msg.message, msg.wParam, msg.lParam);
+                                TRACE(_T("Dispatch WM during graph close: msg=0x%x wp=%PRIu64 lp=%ld\n"), msg.message, msg.wParam, msg.lParam);
                             }
                             TranslateMessage(&msg);
                             DispatchMessage(&msg);
@@ -20001,7 +20000,7 @@ void CMainFrame::CloseMedia(bool bNextIsQueued/* = false*/, bool bPendingFileDel
     while (!postponedmsg.IsEmpty()) {
         msg = postponedmsg.RemoveHead();
         CString msgstr;
-        msgstr.Format(L"Postponed WM after graph close: msg=0x%x wp=%u lp=%ld (pendingmedia=%d)\n", msg.message, msg.wParam, msg.lParam, bNextIsQueued);
+        msgstr.Format(L"Postponed WM after graph close: msg=0x%x wp=%PRIu64 lp=%ld (pendingmedia=%d)\n", msg.message, msg.wParam, msg.lParam, bNextIsQueued);
         TRACE(msgstr);
         if (USE_LOGGER(s)) {
             PLAYER_LOG(msgstr);

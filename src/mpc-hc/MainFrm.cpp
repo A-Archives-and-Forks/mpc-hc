@@ -1290,6 +1290,11 @@ void CMainFrame::OnClose()
 #if USE_DRDUMP_CRASH_REPORTER & (MPC_VERSION_REV >= 10)
         throw 1;
 #else
+        if (USE_LOGGER(s)) {
+            PLAYER_LOG(_T("CMainFrame::OnClose - Unexpected loadstate: %d"), (int)GetLoadState());
+            FLUSH_LOGGER();
+        }
+        ASSERT(false);
         ForceCloseProcess();
 #endif
     }   
@@ -1965,6 +1970,10 @@ void CMainFrame::OnDisplayChange() // untested, not sure if it's working...
 {
     TRACE(_T("*** CMainFrame::OnDisplayChange()\n"));
 
+    if (USE_LOGGER(AfxGetAppSettings())) {
+        PLAYER_LOG(_T("CMainFrame::OnDisplayChange"));
+    }
+
     if (GetLoadState() == MLS::LOADED) {
         if (m_bOpenedThroughThread && m_pGraphThread && m_pGraphThread->m_hThread) {
             CAMMsgEvent e;
@@ -2037,6 +2046,10 @@ void CMainFrame::OnSysCommand(UINT nID, LPARAM lParam)
             TRACE(_T("SC_SCREENSAVE, nID = %u, lParam = %d\n"), nID, lParam);
             return;
         }
+    }
+
+    if (USE_LOGGER(AfxGetAppSettings())) {
+        PLAYER_LOG(_T("CMainFrame::OnSysCommand - nID=%u lParam=%ld"), nID, lParam);
     }
 
     __super::OnSysCommand(nID, lParam);

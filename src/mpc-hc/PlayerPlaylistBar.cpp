@@ -253,7 +253,11 @@ void CPlayerPlaylistBar::AddItem(CAtlList<CString>& fns, CAtlList<CString>* subs
     }
 
     pli.AutoLoadFiles();
-    pli.m_label = label;
+    if (label) {
+        pli.m_label = label;
+    } else {
+        ASSERT(false);
+    }
     if (!ydl_src.IsEmpty()) {
         pli.m_ydlSourceURL = ydl_src;
         pli.m_useragent = ydl_ua;
@@ -976,7 +980,7 @@ bool CPlayerPlaylistBar::SaveMPCPlayList(CString fn, CTextFile::enc e)
         str.Format(_T("%d,type,%d"), i, pli.m_type);
         f.WriteString(str + _T("\n"));
 
-        if (!pli.m_label.IsEmpty()) {
+        if (pli.m_label && !pli.m_label.IsEmpty()) {
             f.WriteString(idx + _T(",label,") + pli.m_label + _T("\n"));
         }
 

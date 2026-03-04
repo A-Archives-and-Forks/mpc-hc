@@ -5003,6 +5003,10 @@ BOOL CMainFrame::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCDS)
 
     CAppSettings& s = AfxGetAppSettings();
 
+    if (USE_LOGGER(s)) {
+        PLAYER_LOG(_T("CMainFrame::OnCopyData"));
+    }
+
     if (m_pSkypeMoodMsgHandler && m_pSkypeMoodMsgHandler->HandleMessage(pWnd->GetSafeHwnd(), pCDS)) {
         return TRUE;
     } else if (pCDS->dwData != 0x6ABE51 || pCDS->cbData < sizeof(DWORD)) {
@@ -20636,6 +20640,10 @@ void CMainFrame::ProcessAPICommand(COPYDATASTRUCT* pCDS)
     CAtlList<CString> fns;
     REFERENCE_TIME rtPos = 0;
     CString fn;
+
+    if (USE_LOGGER(AfxGetAppSettings())) {
+        PLAYER_LOG(_T("CMainFrame::ProcessAPICommand - CMD=%lu"), pCDS->dwData);
+    }
 
     switch (pCDS->dwData) {
         case CMD_OPENFILE:

@@ -2310,6 +2310,7 @@ void CFGManagerCustom::InsertLAVVideo(bool IsPreview)
     pFGF->AddType(MEDIATYPE_Video, MEDIASUBTYPE_NCLC);
     pFGF->AddType(MEDIATYPE_Video, MEDIASUBTYPE_FSV1);
     pFGF->AddType(MEDIATYPE_Video, MEDIASUBTYPE_FSV2);
+    pFGF->AddType(MEDIATYPE_Video, MEDIASUBTYPE_LAV_RAWVIDEO);
 #endif
 
     // Add LAV Video if needed

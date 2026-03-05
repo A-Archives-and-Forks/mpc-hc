@@ -1287,16 +1287,15 @@ void CMainFrame::OnClose()
     ASSERT(!m_bOpenMediaActive);
 
     if (GetLoadState() != MLS::CLOSED) {
-#if USE_DRDUMP_CRASH_REPORTER & (MPC_VERSION_REV >= 10)
-        throw 1;
-#else
+#if MPC_VERSION_REV > 0
+        AfxMessageBox(L"Unexpected state while closing.\n\nPlease contact the developers, so that we can analyze the problem.\n\nTo enable debug log:\nOptions > Advanced > DebugLogMask = 1\nLog file location:\n%APPDATA%\\MPC-HC\\player.log", MB_OK);
+#endif
         if (USE_LOGGER(s)) {
             PLAYER_LOG(_T("CMainFrame::OnClose - Unexpected loadstate: %d"), (int)GetLoadState());
             FLUSH_LOGGER();
         }
         ASSERT(false);
         ForceCloseProcess();
-#endif
     }   
 
     {

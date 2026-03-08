@@ -9103,28 +9103,28 @@ void CMainFrame::OnPlayPause()
     m_timerOneTime.Unsubscribe(TimerOneTimeSubscriber::DELAY_PLAYPAUSE_AFTER_AUTOCHANGE_MODE);
     m_bOpeningInAutochangedMonitorMode = false;
 
-    if (GetLoadState() == MLS::LOADED && GetMediaState() == State_Stopped) {
+    if (GetLoadState() != MLS::LOADED) {
+        return;
+    }
+
+    if (GetMediaState() == State_Stopped) {
         MoveVideoWindow(false, true);
     }
 
-    if (GetLoadState() == MLS::LOADED) {
-        if (GetPlaybackMode() == PM_FILE || GetPlaybackMode() == PM_DVD || GetPlaybackMode() == PM_ANALOG_CAPTURE) {
-            if (m_fFrameSteppingActive) {
-                m_pFS->CancelStep();
-                m_fFrameSteppingActive = false;
-                m_nStepForwardCount = 0;
-                if (m_pBA) {
-                    m_pBA->put_Volume(m_nVolumeBeforeFrameStepping);
-                }
+    if (GetPlaybackMode() == PM_FILE || GetPlaybackMode() == PM_DVD || GetPlaybackMode() == PM_ANALOG_CAPTURE) {
+        if (m_fFrameSteppingActive) {
+            m_pFS->CancelStep();
+            m_fFrameSteppingActive = false;
+            m_nStepForwardCount = 0;
+            if (m_pBA) {
+                m_pBA->put_Volume(m_nVolumeBeforeFrameStepping);
             }
-            MediaControlPause(true);
-        } else {
-            ASSERT(FALSE);
         }
-
-        KillTimer(TIMER_STATS);
-        SetAlwaysOnTop(AfxGetAppSettings().iOnTop);
+        MediaControlPause(true);
     }
+
+    KillTimer(TIMER_STATS);
+    SetAlwaysOnTop(AfxGetAppSettings().iOnTop);
 
     CString strOSD(StrRes(ID_PLAY_PAUSE));
     int i = strOSD.Find(_T("\n"));

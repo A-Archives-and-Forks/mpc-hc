@@ -631,6 +631,7 @@ static constexpr wmcmd_base default_wmcmds[] = {
     { ID_PRESIZE_SHADERS_TOGGLE,          'P', FCONTROL,          IDS_PRESIZE_SHADERS_TOGGLE },
     { ID_POSTSIZE_SHADERS_TOGGLE,         'P', FCONTROL | FALT,   IDS_POSTSIZE_SHADERS_TOGGLE },
     { ID_SUBTITLES_OVERRIDE_DEFAULT_STYLE,  0, 0,                 IDS_AG_TOGGLE_DEFAULT_SUBTITLE_STYLE },
+    { ID_SUBTITLES_OVERRIDE_ALL_STYLES,     0, 0,                 IDS_AG_TOGGLE_OVERRIDE_SUBTITLE_STYLES },
     { ID_VIEW_PRESETS_MINIMAL,            '1', 0,                 IDS_AG_VIEW_MINIMAL },
     { ID_VIEW_PRESETS_COMPACT,            '2', 0,                 IDS_AG_VIEW_COMPACT },
     { ID_VIEW_PRESETS_NORMAL,             '3', 0,                 IDS_AG_VIEW_NORMAL },
@@ -780,7 +781,7 @@ void CAppSettings::CreateCommands()
         CommandIDToWMCMD[wc.cmd] = &wc;
         wmcmds.AddTail(w);
     }
-    ASSERT(wmcmds.GetCount() <= ACCEL_LIST_SIZE);
+    ASSERT(wmcmds.GetCount() == ACCEL_LIST_SIZE);
 }
 
 CAppSettings::~CAppSettings()

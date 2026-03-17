@@ -779,6 +779,7 @@
 #define IDS_SUB_POS_UP                  24057
 #define IDS_SUB_FONT_SIZE_DEC           24058
 #define IDS_SUB_FONT_SIZE_INC           24059
+#define ID_SUBTITLES_OVERRIDE_ALL_STYLES 24060
 #define ID_VIEW_TEARING_TEST            32769
 #define ID_FILE_OPENDISC                32774
 #define ID_SHADERS                      32775
@@ -1139,6 +1140,7 @@
 #define IDS_AG_ZOOM_SUB                 33459
 #define IDS_SEEKBAR_HOVER_PREVIEW       33460
 #define IDS_SEEKBAR_HOVER_TOOLTIP       33461
+#define IDS_AG_TOGGLE_OVERRIDE_SUBTITLE_STYLES 33462
 #define ID_RECENT_FILE_START            34000
 #define ID_RECENT_FILE_END              34999
 #define IDS_MFMT_AVI                    39001

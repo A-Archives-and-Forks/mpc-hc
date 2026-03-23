@@ -19614,19 +19614,11 @@ bool CMainFrame::CloseMediaBeforeOpen()
 {
     if (m_eMediaLoadState == MLS::LOADED || m_eMediaLoadState == MLS::LOADING) {
         CloseMedia(true);
-    } else if (m_eMediaLoadState == MLS::CLOSING || m_eMediaLoadState == MLS::FAILING || m_eMediaLoadState == MLS::ABORTING) {
-        // was already busy closing, wait a little
-        for (int i = 0; i < 10; i++) {
-            Sleep(250);
-            if (m_eMediaLoadState == MLS::CLOSED) {
-                break;
-            }
-        }
-        if (m_eMediaLoadState != MLS::CLOSED) {
-            PLAYER_LOG(_T("CMainFrame::CloseMediaBeforeOpen - unexpected loadstate %d"), m_eMediaLoadState);
-            ASSERT(false);
-            return false;
-        }
+    } else if (m_eMediaLoadState != MLS::CLOSED) {
+        PLAYER_LOG(_T("CMainFrame::CloseMediaBeforeOpen - unexpected loadstate %d"), m_eMediaLoadState);
+        FLUSH_LOGGER();
+        ASSERT(false);
+        return false;
     }
     if (AfxGetMyApp()->m_fClosingState) {
         ASSERT(false);
@@ -19666,25 +19658,18 @@ void CMainFrame::CloseMedia(bool bNextIsQueued/* = false*/, bool bPendingFileDel
     if (m_eMediaLoadState == MLS::CLOSED) {
         if (USE_LOGGER(s)) {
             PLAYER_LOG(_T("CMainFrame::CloseMedia (thread %lu) - ignoring because already closed"), GetCurrentThreadId());
+            FLUSH_LOGGER();
         }
         TRACE(_T("Ignoring duplicate close action.\n"));
         return;
     }
-    if (m_eMediaLoadState == MLS::CLOSING) {
-        if (USE_LOGGER(s)) {
-            PLAYER_LOG(_T("CMainFrame::CloseMedia (thread %lu) - already closing - waiting"), GetCurrentThreadId());
-        }
+    if (m_eMediaLoadState == MLS::CLOSING || m_eMediaLoadState == MLS::FAILING || m_eMediaLoadState == MLS::ABORTING) {
         TRACE(_T("Duplicate close action.\n"));
-        for (int i = 0; i < 10; i++) {
-            Sleep(250);
-            if (m_eMediaLoadState == MLS::CLOSED) {
-                break;
-            }
-        }
-        if (USE_LOGGER(s) && m_eMediaLoadState != MLS::CLOSED) {
+        if (USE_LOGGER(s)) {
             PLAYER_LOG(_T("CMainFrame::CloseMedia (thread %lu) - unexpected loadstate"), GetCurrentThreadId());
+            FLUSH_LOGGER();
         }
-        ASSERT(m_eMediaLoadState == MLS::CLOSED);
+        ASSERT(false);
         return;
     }
 

@@ -1248,6 +1248,7 @@ void CMainFrame::OnDestroy()
         CAMMsgEvent e;
         if (!m_pGraphThread->PostThreadMessage(CGraphThread::TM_EXIT, (WPARAM)0, (LPARAM)&e) || !e.Wait(2000)) {
             PLAYER_LOG(_T("CMainFrame::OnDestroy - Terminating graph thread due to timeout or failure"));
+            FLUSH_LOGGER();
             TerminateThread(m_pGraphThread->m_hThread, DWORD_ERROR);
             ASSERT(false);
         }
@@ -1271,6 +1272,7 @@ void CMainFrame::OnClose()
 
     if (USE_LOGGER(s)) {
         PLAYER_LOG(_T("CMainFrame::OnClose"));
+        FLUSH_LOGGER();
     }
 
     s.bToggleShader = m_bToggleShader;
@@ -1987,6 +1989,7 @@ void CMainFrame::OnDisplayChange() // untested, not sure if it's working...
 
     if (USE_LOGGER(AfxGetAppSettings())) {
         PLAYER_LOG(_T("CMainFrame::OnDisplayChange"));
+        FLUSH_LOGGER();
     }
 
     if (GetLoadState() == MLS::LOADED) {
@@ -4182,6 +4185,7 @@ LRESULT CMainFrame::OnFilePostOpenmedia(WPARAM wParam, LPARAM lParam)
     } else {
         if (USE_LOGGER(s)) {
             PLAYER_LOG(_T("CMainFrame::OnFilePostOpenmedia (thread %lu) - unexpected state"), GetCurrentThreadId());
+            FLUSH_LOGGER();
         }
         ASSERT(FALSE);
         return 1;
@@ -4403,6 +4407,7 @@ LRESULT CMainFrame::OnOpenMediaFailed(WPARAM wParam, LPARAM lParam)
 
     if (USE_LOGGER(s)) {
         PLAYER_LOG(_T("CMainFrame::OnOpenMediaFailed (thread %lu)"), GetCurrentThreadId());
+        FLUSH_LOGGER();
     }
 
     m_lastOMD.Free();
@@ -13579,6 +13584,7 @@ void CMainFrame::OpenCreateGraphObject(OpenMediaData* pOMD)
     if (USE_LOGGER(AfxGetAppSettings())) {
         if (m_pGB) {
             PLAYER_LOG(_T("CMainFrame::OpenCreateGraphObject (thread %lu) - unxpected value for m_pGB"), GetCurrentThreadId());
+            FLUSH_LOGGER();
         } else {
             PLAYER_LOG(_T("CMainFrame::OpenCreateGraphObject (thread %lu)"), GetCurrentThreadId());
         }
@@ -16234,6 +16240,7 @@ bool CMainFrame::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
     } else if (!m_fOpeningAborted) {
         if (USE_LOGGER(s)) {
             PLAYER_LOG(_T("CMainFrame::OpenMediaPrivate - failure: %s"), err);
+            FLUSH_LOGGER();
         }
         auto args = getMessageArgs();
         if (!m_bOpenedThroughThread) {
@@ -16246,6 +16253,7 @@ bool CMainFrame::OpenMediaPrivate(CAutoPtr<OpenMediaData> pOMD)
         m_bOpenMediaActive = false;
         if (USE_LOGGER(s)) {
             PLAYER_LOG(_T("CMainFrame::OpenMediaPrivate - aborted"));
+            FLUSH_LOGGER();
         }
     }
 
@@ -19458,6 +19466,7 @@ void CMainFrame::OpenMedia(CAutoPtr<OpenMediaData> pOMD)
     if (m_bOpenMediaActive) {
         if (USE_LOGGER(s)) {
             PLAYER_LOG(_T("CMainFrame::OpenMedia (thread %lu) -> skipping because there already is an active OpenMedia call"), GetCurrentThreadId());
+            FLUSH_LOGGER();
         }
         TRACE(_T("CMainFrame::OpenMedia (thread %lu) -> skipping because there already is an active OpenMedia call\n"), GetCurrentThreadId());
         return;
@@ -19524,6 +19533,7 @@ void CMainFrame::OpenMedia(CAutoPtr<OpenMediaData> pOMD)
     if (bUseThread && (!m_pGraphThread->m_hThread || m_pGraphThread->hr_coinit != S_OK)) {
         if (USE_LOGGER(s)) {
             PLAYER_LOG(_T("CMainFrame::OpenMedia - graph thread init error (0x%08X) - proceeding without worker thread"), m_pGraphThread->hr_coinit);
+            FLUSH_LOGGER();
         }
         bUseThread = false;
         m_pGraphThread = nullptr;
@@ -19578,6 +19588,7 @@ void CMainFrame::OpenMedia(CAutoPtr<OpenMediaData> pOMD)
             int lasterror = GetLastError();
             if (USE_LOGGER(s)) {
                 PLAYER_LOG(_T("CMainFrame::OpenMedia - failed to use graph working thread (error %d)"), lasterror);
+                FLUSH_LOGGER();
             }
             bUseThread = false;
             m_pGraphThread = nullptr;
@@ -19597,6 +19608,7 @@ bool CMainFrame::ResetDevice()
 {
     if (USE_LOGGER(AfxGetAppSettings())) {
         PLAYER_LOG(_T("CMainFrame::ResetDevice"));
+        FLUSH_LOGGER();
     }
     if (m_pCAP2_preview) {
         m_pCAP2_preview->ResetDevice();
@@ -19611,6 +19623,7 @@ bool CMainFrame::DisplayChange()
 {
     if (USE_LOGGER(AfxGetAppSettings())) {
         PLAYER_LOG(_T("CMainFrame::DisplayChange"));
+        FLUSH_LOGGER();
     }
     if (m_pCAP2_preview) {
         m_pCAP2_preview->DisplayChange();
@@ -21885,6 +21898,7 @@ UINT CMainFrame::OnPowerBroadcast(UINT nPowerEvent, LPARAM nEventData)
 
     if (USE_LOGGER(AfxGetAppSettings())) {
         PLAYER_LOG(_T("CMainFrame::OnPowerBroadcast (%u)"), nPowerEvent);
+        FLUSH_LOGGER();
     }
 
     switch (nPowerEvent) {
@@ -21931,6 +21945,7 @@ void CMainFrame::OnSessionChange(UINT nSessionState, UINT nId)
     const auto& s = AfxGetAppSettings();
     if (USE_LOGGER(s)) {
         PLAYER_LOG(_T("CMainFrame::OnSessionChange (%u)"), nSessionState);
+        FLUSH_LOGGER();
     }
 
     if (s.bLockNoPause) {

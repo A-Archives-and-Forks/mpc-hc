@@ -5184,10 +5184,6 @@ BOOL CMainFrame::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCDS)
         PostMessage(WM_COMMAND, ID_FILE_OPENDEVICE);
         s.nCLSwitches &= ~CLSW_DEVICE;
     } else if (!s.slFiles.IsEmpty()) {
-        if (GetMediaState() == State_Running) {
-            MediaControlPause(true);
-        }
-
         CAtlList<CString> sl;
         sl.AddTailList(&s.slFiles);
 
@@ -5202,6 +5198,10 @@ BOOL CMainFrame::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCDS)
             // Nothing more to do
         } else if (!fMulti && CPath(s.slFiles.GetHead() + _T("\\VIDEO_TS")).IsDirectory()) {
             fSetForegroundWindow = true;
+
+            if (GetMediaState() == State_Running) {
+                MediaControlPause(true);
+            }
 
             CAutoPtr<OpenDVDData> p(DEBUG_NEW OpenDVDData());
             if (p) {
@@ -5244,6 +5244,10 @@ BOOL CMainFrame::OnCopyData(CWnd* pWnd, COPYDATASTRUCT* pCDS)
                 }
             } else {
                 fSetForegroundWindow = true;
+
+                if (GetMediaState() == State_Running) {
+                    MediaControlPause(true);
+                }
 
                 if (fMulti || sl.GetCount() == 1) {
                     bool first = true;
@@ -22247,9 +22251,7 @@ bool CMainFrame::OpenBD(CString Path)
     CString ext = CPath(Path).GetExtension();
     ext.MakeLower();
 
-    if ((CPath(Path).IsDirectory() && Path.Find(_T("\\BDMV")))
-            || CPath(Path + _T("\\BDMV")).IsDirectory()
-            || (!ext.IsEmpty() && ext == _T(".bdmv"))) {
+    if ((CPath(Path).IsDirectory() && Path.Find(_T("\\BDMV"))) || CPath(Path + _T("\\BDMV")).IsDirectory() || (!ext.IsEmpty() && ext == _T(".bdmv"))) {
         if (!ext.IsEmpty() && ext == _T(".bdmv")) {
             Path.Replace(_T("\\BDMV\\"), _T("\\"));
             CPath _Path(Path);

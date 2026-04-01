@@ -487,7 +487,6 @@ BEGIN_MESSAGE_MAP(CMPCThemeInPlaceEdit, CMPCThemeInlineEdit)
     ON_WM_NCDESTROY()
     ON_WM_CHAR()
     ON_WM_CREATE()
-    ON_WM_MOUSEWHEEL()
 END_MESSAGE_MAP()
 
 BOOL CMPCThemeInPlaceEdit::PreTranslateMessage(MSG* pMsg)
@@ -545,11 +544,6 @@ int CMPCThemeInPlaceEdit::OnCreate(LPCREATESTRUCT lpCreateStruct)
     SetFont(GetParent()->GetFont());
     SetWindowText(m_sInitText);
     return 0;
-}
-
-BOOL CMPCThemeInPlaceEdit::OnMouseWheel(UINT /*nFlags*/, short /*zDelta*/, CPoint /*pt*/)
-{
-    return TRUE; // swallow; prevent propagation to main frame volume handler
 }
 
 // CPlayerListCtrl

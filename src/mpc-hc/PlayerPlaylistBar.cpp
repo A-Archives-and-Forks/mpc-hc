@@ -1760,6 +1760,7 @@ BEGIN_MESSAGE_MAP(CPlayerPlaylistBar, CMPCThemePlayerBar)
     ON_NOTIFY(LVN_GETDISPINFO, IDC_PLAYLIST, OnLvnGetDispInfoList)
     ON_NOTIFY(LVN_BEGINLABELEDIT, IDC_PLAYLIST, OnLvnBeginlabeleditList)
     ON_NOTIFY(LVN_ENDLABELEDIT, IDC_PLAYLIST, OnLvnEndlabeleditList)
+    ON_NOTIFY(LVN_ODFINDITEM, IDC_PLAYLIST, OnLvnFinditem)
     ON_WM_XBUTTONDOWN()
     ON_WM_XBUTTONUP()
     ON_WM_XBUTTONDBLCLK()
@@ -2696,6 +2697,46 @@ void CPlayerPlaylistBar::OnLvnEndlabeleditList(NMHDR* pNMHDR, LRESULT* pResult)
         }
     }
     *pResult = 0;
+}
+
+void CPlayerPlaylistBar::OnLvnFinditem(NMHDR* pNMHDR, LRESULT* pResult)
+{
+    LPNMLVFINDITEM pFindItem = reinterpret_cast<LPNMLVFINDITEM>(pNMHDR);
+
+    int firstfoundidx = -1;
+    if (pFindItem) {
+        int startidx = pFindItem->iStart;
+        CString findstr = pFindItem->lvfi.psz;
+        int len = findstr.GetLength();
+        int idx = -1;
+        POSITION pos = m_pl.GetHeadPosition();
+        while (pos) {
+            CPlaylistItem& pli = m_pl.GetNext(pos);
+            CString label = pli.GetLabel(0).MakeLower();
+            idx++;
+            if (len > 2) { // search whole label
+                if (label.Find(findstr) >= 0) {
+                    if (idx > startidx) {
+                        *pResult = idx;
+                        return;
+                    } else if (firstfoundidx == -1) {
+                        firstfoundidx = idx;
+                    }
+                }
+            } else { // compare left side
+                if (findstr == label.Left(len)) {
+                    if (idx > startidx) {
+                        *pResult = idx;
+                        return;
+                    } else if (firstfoundidx == -1) {
+                        firstfoundidx = idx;
+                    }
+                }
+            }
+        }
+    }
+
+    *pResult = firstfoundidx;
 }
 
 void CPlayerPlaylistBar::OnXButtonDown(UINT nFlags, UINT nButton, CPoint point)

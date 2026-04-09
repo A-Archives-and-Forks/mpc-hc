@@ -357,7 +357,9 @@ CMpcAudioRenderer::~CMpcAudioRenderer()
 {
 	TRACE(L"CMpcAudioRenderer::~CMpcAudioRenderer()\n");
 
-	m_pMMDeviceEnumerator->UnregisterEndpointNotificationCallback(this);
+    if (m_pMMDeviceEnumerator.p) {
+        m_pMMDeviceEnumerator->UnregisterEndpointNotificationCallback(this);
+    }
 
 	EndReleaseTimer();
 

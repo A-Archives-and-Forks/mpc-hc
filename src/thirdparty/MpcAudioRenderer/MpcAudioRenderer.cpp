@@ -417,10 +417,15 @@ HRESULT	CMpcAudioRenderer::CheckMediaType(const CMediaType *pmt)
 		return VFW_E_TYPE_NOT_ACCEPTED;
 	}
 
+    const WAVEFORMATEX *pWaveFormatEx = (WAVEFORMATEX*)pmt->pbFormat;
+    if (pWaveFormatEx->nChannels == 0 || pWaveFormatEx->nSamplesPerSec == 0 || pWaveFormatEx->nBlockAlign == 0) {
+        ASSERT(false);
+        return VFW_E_TYPE_NOT_ACCEPTED;
+    }
+
 	HRESULT hr = S_OK;
 	if (pmt->subtype == MEDIASUBTYPE_PCM) {
 		// Check S/PDIF & HDMI Bitstream
-		const WAVEFORMATEX *pWaveFormatEx = (WAVEFORMATEX*)pmt->pbFormat;
 		const BOOL bIsBitstreamInput = IsBitstream(pWaveFormatEx);
 		if (bIsBitstreamInput) {
 			hr = CreateAudioClient();

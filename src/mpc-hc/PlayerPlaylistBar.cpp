@@ -1922,8 +1922,8 @@ void CPlayerPlaylistBar::OnLvnKeyDown(NMHDR* pNMHDR, LRESULT* pResult)
                 ASSERT(FALSE);
                 return;
             }
-            if (remplpos == curplpos) {
-                m_pMainFrame->SendMessage(WM_COMMAND, ID_FILE_CLOSEMEDIA);
+            if (remplpos == curplpos && m_pMainFrame->IsStateLoadedOrLoading()) {
+                m_pMainFrame->PostMessage(WM_COMMAND, ID_FILE_CLOSEMEDIA);
             }
             m_pl.RemoveAt(remplpos);
             RebuildPosMap();
@@ -1937,7 +1937,7 @@ void CPlayerPlaylistBar::OnLvnKeyDown(NMHDR* pNMHDR, LRESULT* pResult)
             }
             ResizeListColumn();
         } else {
-           if (Empty() && !m_pMainFrame->IsStateClosed()) {
+           if (Empty() && m_pMainFrame->IsStateLoadedOrLoading()) {
                 m_pMainFrame->PostMessage(WM_COMMAND, ID_FILE_CLOSEMEDIA);
             }
         }

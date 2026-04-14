@@ -20398,6 +20398,11 @@ inline bool CMainFrame::IsStateLoaded()
     return m_eMediaLoadState == MLS::LOADED;
 }
 
+bool CMainFrame::IsStateLoadedOrLoading()
+{
+    return m_eMediaLoadState == MLS::LOADED || m_eMediaLoadState == MLS::LOADING;
+}
+
 inline bool CMainFrame::IsStateClosed()
 {
     return m_eMediaLoadState == MLS::CLOSED;

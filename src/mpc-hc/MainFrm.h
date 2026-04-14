@@ -1255,6 +1255,7 @@ public:
     void        SetLoadState(MLS eState);
     MLS         GetLoadState() const;
     bool        IsStateLoaded();
+    bool        IsStateLoadedOrLoading();
     bool        IsStateClosed();
     bool        IsStateClosedOrLoaded();
     bool        IsStateClosingAborting();

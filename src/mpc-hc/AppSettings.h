@@ -412,15 +412,6 @@ public:
     CWinLircClient();
 };
 
-class CUIceClient : public CRemoteCtrlClient
-{
-protected:
-    virtual void OnCommand(CStringA str);
-
-public:
-    CUIceClient();
-};
-
 #define APPSETTINGS_VERSION 9
 
 struct DVD_POSITION {
@@ -624,9 +615,6 @@ public:
     bool            fWinLirc;
     CString         strWinLircAddr;
     CWinLircClient  WinLircClient;
-    bool            fUIce;
-    CString         strUIceAddr;
-    CUIceClient     UIceClient;
     bool            fGlobalMedia;
 
     // Mouse

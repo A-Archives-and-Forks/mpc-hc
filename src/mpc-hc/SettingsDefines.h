@@ -216,8 +216,6 @@
 #define IDS_RS_WINLIRC                      _T("UseWinLirc")
 #define IDS_RS_TRAYICON                     _T("TrayIcon")
 #define IDS_RS_KEEPASPECTRATIO              _T("KeepAspectRatio")
-#define IDS_RS_UICEADDR                     _T("UICEAddr")
-#define IDS_RS_UICE                         _T("UseUICE")
 #define IDS_RS_JUMPDISTS                    _T("JumpDistS")
 #define IDS_RS_JUMPDISTM                    _T("JumpDistM")
 #define IDS_RS_JUMPDISTL                    _T("JumpDistL")

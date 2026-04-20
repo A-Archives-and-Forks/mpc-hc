@@ -2317,10 +2317,6 @@ BOOL CMPlayerCApp::InitInstance()
     if (m_s->fWinLirc) {
         m_s->WinLircClient.Connect(m_s->strWinLircAddr);
     }
-    m_s->UIceClient.SetHWND(m_pMainWnd->m_hWnd);
-    if (m_s->fUIce) {
-        m_s->UIceClient.Connect(m_s->strUIceAddr);
-    }
 
     if (UpdateChecker::IsAutoUpdateEnabled()) {
         UpdateChecker::CheckForUpdate(true);
@@ -2747,29 +2743,6 @@ void CWinLircClient::OnCommand(CStringA str)
             repcnt = strtol(token, nullptr, 16);
         } else if (j == 2) {
             ExecuteCommand(token, repcnt);
-        }
-    }
-}
-
-// CUIceClient
-
-CUIceClient::CUIceClient()
-{
-}
-
-void CUIceClient::OnCommand(CStringA str)
-{
-    TRACE(_T("CUIceClient (OnCommand): %S\n"), str.GetString());
-
-    CStringA cmd;
-    int i = 0, j = 0;
-    for (CStringA token = str.Tokenize("|", i);
-            !token.IsEmpty();
-            token = str.Tokenize("|", i), j++) {
-        if (j == 0) {
-            cmd = token;
-        } else if (j == 1) {
-            ExecuteCommand(cmd, strtol(token, nullptr, 16));
         }
     }
 }

@@ -97,8 +97,6 @@ CPPageAccelTbl::CPPageAccelTbl()
     , m_list()
     , m_fWinLirc(FALSE)
     , m_WinLircLink(_T("http://winlirc.sourceforge.net/"))
-    , m_fUIce(FALSE)
-    , m_UIceLink(L"https://web.archive.org/web/20160609195532/http://www.mediatexx.com/") // home site no longer works
     , m_nStatusTimerID(0)
     , filterTimerID(0)
     , sortDirection(HDF_SORTUP)
@@ -112,8 +110,7 @@ CPPageAccelTbl::~CPPageAccelTbl()
 
 BOOL CPPageAccelTbl::PreTranslateMessage(MSG* pMsg)
 {
-    if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN
-            && (pMsg->hwnd == m_WinLircEdit.m_hWnd || pMsg->hwnd == m_UIceEdit.m_hWnd)) {
+    if (pMsg->message == WM_KEYDOWN && pMsg->wParam == VK_RETURN && pMsg->hwnd == m_WinLircEdit.m_hWnd) {
         OnApply();
         return TRUE;
     }
@@ -859,11 +856,7 @@ void CPPageAccelTbl::DoDataExchange(CDataExchange* pDX)
     DDX_Control(pDX, IDC_EDIT1, m_WinLircEdit);
     DDX_Control(pDX, IDC_STATICLINK, m_WinLircLink);
     DDX_Check(pDX, IDC_CHECK1, m_fWinLirc);
-    DDX_Text(pDX, IDC_EDIT2, m_UIceAddr);
-    DDX_Control(pDX, IDC_EDIT2, m_UIceEdit);
     DDX_Control(pDX, IDC_EDIT3, filterEdit);
-    DDX_Control(pDX, IDC_STATICLINK2, m_UIceLink);
-    DDX_Check(pDX, IDC_CHECK9, m_fUIce);
     DDX_Check(pDX, IDC_CHECK2, m_fGlobalMedia);
 }
 
@@ -911,15 +904,11 @@ BOOL CPPageAccelTbl::OnInitDialog()
     m_wmcmds.AddTail(&s.wmcmds);
     m_fWinLirc = s.fWinLirc;
     m_WinLircAddr = s.strWinLircAddr;
-    m_fUIce = s.fUIce;
-    m_UIceAddr = s.strUIceAddr;
     m_fGlobalMedia = s.fGlobalMedia;
 
     CString text;
     text.Format(IDS_STRING_COLON, _T("WinLIRC"));
     m_WinLircLink.SetWindowText(text);
-    text.Format(IDS_STRING_COLON, _T("uICE"));
-    m_UIceLink.SetWindowText(text);
 
     UpdateData(FALSE);
 
@@ -1015,11 +1004,6 @@ BOOL CPPageAccelTbl::OnApply()
     s.strWinLircAddr = m_WinLircAddr;
     if (s.fWinLirc) {
         s.WinLircClient.Connect(m_WinLircAddr);
-    }
-    s.fUIce = !!m_fUIce;
-    s.strUIceAddr = m_UIceAddr;
-    if (s.fUIce) {
-        s.UIceClient.Connect(m_UIceAddr);
     }
     s.fGlobalMedia = !!m_fGlobalMedia;
 
@@ -1384,16 +1368,7 @@ void CPPageAccelTbl::OnTimer(UINT_PTR nIDEvent)
             m_WinLircEdit.GetWindowText(addr);
             s.WinLircClient.Connect(addr);
         }
-
         m_WinLircEdit.Invalidate();
-
-        if (m_fUIce) {
-            CString addr;
-            m_UIceEdit.GetWindowText(addr);
-            s.UIceClient.Connect(addr);
-        }
-
-        m_UIceEdit.Invalidate();
 
         m_counter++;
     } else if (nIDEvent == filterTimerID) {
@@ -1416,8 +1391,6 @@ HBRUSH CPPageAccelTbl::OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor)
 
     if (*pWnd == m_WinLircEdit) {
         status = s.WinLircClient.GetStatus();
-    } else if (*pWnd == m_UIceEdit) {
-        status = s.UIceClient.GetStatus();
     }
 
     if (status == 0 || status == 2 && (m_counter & 1)) {
@@ -1450,9 +1423,6 @@ void CPPageAccelTbl::OnCancel()
 
     if (!s.fWinLirc) {
         s.WinLircClient.DisConnect();
-    }
-    if (!s.fUIce) {
-        s.UIceClient.DisConnect();
     }
 
     __super::OnCancel();

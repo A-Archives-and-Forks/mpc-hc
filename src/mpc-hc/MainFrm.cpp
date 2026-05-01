@@ -4225,7 +4225,11 @@ LRESULT CMainFrame::OnFilePostOpenmedia(WPARAM wParam, LPARAM lParam)
 
     // set shader selection
     if (m_pCAP || m_pCAP2) {
-        SetShaders(m_bToggleShader, m_bToggleShaderScreenSpace);
+        bool pre = m_bToggleShader && s.m_Shaders.GetCurrentPreset().GetPreResize().size() > 0;
+        bool post = m_bToggleShaderScreenSpace && s.m_Shaders.GetCurrentPreset().GetPostResize().size() > 0;
+        if (pre || post) {
+            SetShaders(pre, post);
+        }
     }
 
     // load keyframes for fast-seek
@@ -13440,12 +13444,6 @@ void CMainFrame::SetShaders(bool bSetPreResize/* = true*/, bool bSetPostResize/*
         m_pCAP3->ClearPixelShaders(TARGET_SCREEN);
         int shadercount = 0;
         if (bSetPreResize) {
-            int preTarget;
-            if (s.iDSVideoRendererType == VIDRNDT_DS_MPCVR) { //for now MPC-VR does not support pre-size shaders
-                preTarget = TARGET_SCREEN;
-            } else {
-                preTarget = TARGET_FRAME;
-            }
             for (const auto& shader : s.m_Shaders.GetCurrentPreset().GetPreResize().ExpandMultiPassShaderList()) {
                 ShaderC* pShader = GetShader(shader.filePath, PShaderMode == 11);
                 if (pShader) {
@@ -13454,9 +13452,9 @@ void CMainFrame::SetShaders(bool bSetPreResize/* = true*/, bool bSetPostResize/*
                     label.Format(L"Shader%d", shadercount);
                     CStringA profile = pShader->profile;
                     CStringA srcdata = pShader->srcdata;
-                    if (FAILED(m_pCAP3->AddPixelShader(preTarget, label, profile, srcdata))) {
+                    if (FAILED(m_pCAP3->AddPixelShader(TARGET_FRAME, label, profile, srcdata))) {
                         preFailed = true;
-                        m_pCAP3->ClearPixelShaders(preTarget);
+                        m_pCAP3->ClearPixelShaders(TARGET_FRAME);
                         break;
                     }
                 }

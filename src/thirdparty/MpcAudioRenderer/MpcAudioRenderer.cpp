@@ -1853,125 +1853,6 @@ HRESULT CMpcAudioRenderer::InitAudioClient()
 		TRACE(L"CMpcAudioRenderer::InitAudioClient() - IMMDevice::Activate() failed: (0x%08x)\n", hr);
 	} else {
 		TRACE(L"CMpcAudioRenderer::InitAudioClient() - success\n");
-		if (m_wBitsPerSampleList.empty()) {
-			// get list of supported output formats - wBitsPerSample, nChannels(dwChannelMask), nSamplesPerSec
-			const WORD  wBitsPerSampleValues[] = {16, 24, 32};
-			const DWORD nSamplesPerSecValues[] = {44100, 48000, 88200, 96000, 176400, 192000, 384000};
-			const DWORD nSamplesPerSecValues2[] = {44100, 48000};
-			const channel_layout_t ChannelLayoutValues[] = {
-				{2, KSAUDIO_SPEAKER_STEREO},
-				{4, KSAUDIO_SPEAKER_QUAD},
-				{4, KSAUDIO_SPEAKER_SURROUND},
-				{6, KSAUDIO_SPEAKER_5POINT1_SURROUND},
-				{6, KSAUDIO_SPEAKER_5POINT1},
-				{8, KSAUDIO_SPEAKER_7POINT1_SURROUND},
-				{8, KSAUDIO_SPEAKER_7POINT1},
-			};
-
-			auto RemoveAll = [&]() {
-				m_wBitsPerSampleList.clear();
-				m_nChannelsList.clear();
-				m_dwChannelMaskList.clear();
-				m_AudioParamsList.clear();
-				m_bReal32bitSupport = FALSE;
-			};
-
-			WAVEFORMATEXTENSIBLE wfex;
-			bool real32bit_tested = false;
-
-			// 1 - wBitsPerSample
-			for (const auto& _bitdepth : wBitsPerSampleValues) {
-				for (const auto& _samplerate : nSamplesPerSecValues2) {
-					CreateFormat(wfex, _bitdepth, 2, KSAUDIO_SPEAKER_STEREO, _samplerate);
-					if (S_OK == m_pAudioClient->IsFormatSupported(AUDCLNT_SHAREMODE_EXCLUSIVE, (WAVEFORMATEX*)&wfex, nullptr)) {
-						if (Contains(m_wBitsPerSampleList, _bitdepth) == false) {
-							m_wBitsPerSampleList.push_back(_bitdepth);
-							break;
-						}
-
-						if (_bitdepth == 32 && !real32bit_tested) {
-							CreateFormat(wfex, _bitdepth, 2, KSAUDIO_SPEAKER_STEREO, _samplerate, 32);
-							m_bReal32bitSupport = (S_OK == m_pAudioClient->IsFormatSupported(AUDCLNT_SHAREMODE_EXCLUSIVE, (WAVEFORMATEX*)&wfex, nullptr));
-							real32bit_tested = true;
-						}
-					}
-				}
-			}
-			if (m_wBitsPerSampleList.empty()) {
-				RemoveAll();
-				return hr;
-			}
-
-			// 2 - m_nSamplesPerSec
-			for (const auto& _bitdepth : m_wBitsPerSampleList) {
-				bool support_88200 = false;
-				for (const auto& _samplerate : nSamplesPerSecValues) {
-					if (_samplerate == 176400 && !support_88200) {
-						continue;
-					}
-					CreateFormat(wfex, _bitdepth, ChannelLayoutValues[0].channels, ChannelLayoutValues[0].layout, _samplerate);
-					if (S_OK == m_pAudioClient->IsFormatSupported(AUDCLNT_SHAREMODE_EXCLUSIVE, (WAVEFORMATEX*)&wfex, nullptr)) {
-						AudioParams ap(_bitdepth, _samplerate);
-						m_AudioParamsList.push_back(ap);
-						if (_samplerate == 88200) {
-							support_88200 = true;
-						}
-					}
-				}
-			}
-			if (m_AudioParamsList.empty()) {
-				RemoveAll();
-				return hr;
-			}
-
-			// 3 - nChannels(dwChannelMask)
-			AudioParams ap = m_AudioParamsList[0];
-			for (const auto item : ChannelLayoutValues) {
-				CreateFormat(wfex, ap.wBitsPerSample, item.channels, item.layout, ap.nSamplesPerSec);
-				if (S_OK == m_pAudioClient->IsFormatSupported(AUDCLNT_SHAREMODE_EXCLUSIVE, (WAVEFORMATEX*)&wfex, nullptr)) {
-					m_nChannelsList.push_back(item.channels);
-					m_dwChannelMaskList.push_back(item.layout);
-				}
-			}
-			if (m_nChannelsList.empty()) {
-				RemoveAll();
-				return hr;
-			}
-
-#ifdef DEBUG_OR_LOG
-			TRACE(L"    List of supported output formats:\n");
-			TRACE(L"        BitsPerSample:\n");
-			for (const auto& _bitdepth : m_wBitsPerSampleList) {
-				if (_bitdepth == 32 && !m_bReal32bitSupport) {
-					TRACE(L"            24 padded to 32\n");
-				} else {
-					TRACE(L"            %d\n", _bitdepth);
-				}
-				TRACE(L"            SamplesPerSec:\n");
-				for (const auto& audioparams : m_AudioParamsList) {
-					if (audioparams.wBitsPerSample == _bitdepth) {
-						TRACE(L"                %d\n", audioparams.nSamplesPerSec);
-					}
-				}
-			}
-
-			#define ADDENTRY(mode) ChannelMaskStr[mode] = L#mode
-			std::map<DWORD, CString> ChannelMaskStr;
-			ADDENTRY(KSAUDIO_SPEAKER_STEREO);
-			ADDENTRY(KSAUDIO_SPEAKER_QUAD);
-			ADDENTRY(KSAUDIO_SPEAKER_SURROUND);
-			ADDENTRY(KSAUDIO_SPEAKER_5POINT1_SURROUND);
-			ADDENTRY(KSAUDIO_SPEAKER_5POINT1);
-			ADDENTRY(KSAUDIO_SPEAKER_7POINT1_SURROUND);
-			ADDENTRY(KSAUDIO_SPEAKER_7POINT1);
-			#undef ADDENTRY
-
-			TRACE(L"        Channels:\n");
-			for (size_t i = 0; i < m_nChannelsList.size(); i++) {
-				TRACE(L"            %d/0x%x  [%s]\n", m_nChannelsList[i], m_dwChannelMaskList[i], ChannelMaskStr[m_dwChannelMaskList[i]]);
-			}
-#endif
-		}
 	}
 	return hr;
 }
@@ -2629,14 +2510,183 @@ static DWORD FindClosestInArray(std::vector<DWORD>& array, DWORD val)
 	return Num;
 }
 
+bool CMpcAudioRenderer::CreateFormatSupportList()
+{
+    if (m_wBitsPerSampleList.empty()) {
+        TRACE(L"CMpcAudioRenderer::CreateFormatSupportList()\n");
+
+        // get list of supported output formats - wBitsPerSample, nChannels(dwChannelMask), nSamplesPerSec
+        const WORD  wBitsPerSampleValues[] = { 16, 24, 32 };
+        const DWORD nSamplesPerSecValues[] = { 44100, 48000, 88200, 96000, 176400, 192000, 384000 };
+        const DWORD nSamplesPerSecValues2[] = { 44100, 48000 };
+        const channel_layout_t ChannelLayoutValues[] = {
+            {2, KSAUDIO_SPEAKER_STEREO},
+            {4, KSAUDIO_SPEAKER_QUAD},
+            {4, KSAUDIO_SPEAKER_SURROUND},
+            {6, KSAUDIO_SPEAKER_5POINT1_SURROUND},
+            {6, KSAUDIO_SPEAKER_5POINT1},
+            {8, KSAUDIO_SPEAKER_7POINT1_SURROUND},
+            {8, KSAUDIO_SPEAKER_7POINT1},
+        };
+
+        auto RemoveAll = [&]() {
+            m_wBitsPerSampleList.clear();
+            m_nChannelsList.clear();
+            m_dwChannelMaskList.clear();
+            m_AudioParamsList.clear();
+            m_bReal32bitSupport = FALSE;
+        };
+
+        WAVEFORMATEXTENSIBLE wfex;
+        bool real32bit_tested = false;
+
+        // 1 - wBitsPerSample
+        for (const auto& _bitdepth : wBitsPerSampleValues) {
+            for (const auto& _samplerate : nSamplesPerSecValues2) {
+                CreateFormat(wfex, _bitdepth, 2, KSAUDIO_SPEAKER_STEREO, _samplerate);
+                if (S_OK == m_pAudioClient->IsFormatSupported(AUDCLNT_SHAREMODE_EXCLUSIVE, (WAVEFORMATEX*)&wfex, nullptr)) {
+                    if (Contains(m_wBitsPerSampleList, _bitdepth) == false) {
+                        m_wBitsPerSampleList.push_back(_bitdepth);
+                        break;
+                    }
+
+                    if (_bitdepth == 32 && !real32bit_tested) {
+                        CreateFormat(wfex, _bitdepth, 2, KSAUDIO_SPEAKER_STEREO, _samplerate, 32);
+                        m_bReal32bitSupport = (S_OK == m_pAudioClient->IsFormatSupported(AUDCLNT_SHAREMODE_EXCLUSIVE, (WAVEFORMATEX*)&wfex, nullptr));
+                        real32bit_tested = true;
+                    }
+                }
+            }
+        }
+        if (m_wBitsPerSampleList.empty()) {
+            RemoveAll();
+            return false;
+        }
+
+        // 2 - m_nSamplesPerSec
+        for (const auto& _bitdepth : m_wBitsPerSampleList) {
+            bool support_88200 = false;
+            for (const auto& _samplerate : nSamplesPerSecValues) {
+                if (_samplerate == 176400 && !support_88200) {
+                    continue;
+                }
+                CreateFormat(wfex, _bitdepth, ChannelLayoutValues[0].channels, ChannelLayoutValues[0].layout, _samplerate);
+                if (S_OK == m_pAudioClient->IsFormatSupported(AUDCLNT_SHAREMODE_EXCLUSIVE, (WAVEFORMATEX*)&wfex, nullptr)) {
+                    AudioParams ap(_bitdepth, _samplerate);
+                    m_AudioParamsList.push_back(ap);
+                    if (_samplerate == 88200) {
+                        support_88200 = true;
+                    }
+                }
+            }
+        }
+        if (m_AudioParamsList.empty()) {
+            RemoveAll();
+            return false;
+        }
+
+        // 3 - nChannels(dwChannelMask)
+        AudioParams ap = m_AudioParamsList[0];
+        for (const auto item : ChannelLayoutValues) {
+            CreateFormat(wfex, ap.wBitsPerSample, item.channels, item.layout, ap.nSamplesPerSec);
+            if (S_OK == m_pAudioClient->IsFormatSupported(AUDCLNT_SHAREMODE_EXCLUSIVE, (WAVEFORMATEX*)&wfex, nullptr)) {
+                m_nChannelsList.push_back(item.channels);
+                m_dwChannelMaskList.push_back(item.layout);
+            }
+        }
+        if (m_nChannelsList.empty()) {
+            RemoveAll();
+            return false;
+        }
+
+#ifdef DEBUG_OR_LOG
+        TRACE(L"    List of supported output formats:\n");
+        TRACE(L"        BitsPerSample:\n");
+        for (const auto& _bitdepth : m_wBitsPerSampleList) {
+            if (_bitdepth == 32 && !m_bReal32bitSupport) {
+                TRACE(L"            24 padded to 32\n");
+            } else {
+                TRACE(L"            %d\n", _bitdepth);
+            }
+            TRACE(L"            SamplesPerSec:\n");
+            for (const auto& audioparams : m_AudioParamsList) {
+                if (audioparams.wBitsPerSample == _bitdepth) {
+                    TRACE(L"                %d\n", audioparams.nSamplesPerSec);
+                }
+            }
+        }
+
+#define ADDENTRY(mode) ChannelMaskStr[mode] = L#mode
+        std::map<DWORD, CString> ChannelMaskStr;
+        ADDENTRY(KSAUDIO_SPEAKER_STEREO);
+        ADDENTRY(KSAUDIO_SPEAKER_QUAD);
+        ADDENTRY(KSAUDIO_SPEAKER_SURROUND);
+        ADDENTRY(KSAUDIO_SPEAKER_5POINT1_SURROUND);
+        ADDENTRY(KSAUDIO_SPEAKER_5POINT1);
+        ADDENTRY(KSAUDIO_SPEAKER_7POINT1_SURROUND);
+        ADDENTRY(KSAUDIO_SPEAKER_7POINT1);
+#undef ADDENTRY
+
+        TRACE(L"        Channels:\n");
+        for (size_t i = 0; i < m_nChannelsList.size(); i++) {
+            TRACE(L"            %d/0x%x  [%s]\n", m_nChannelsList[i], m_dwChannelMaskList[i], ChannelMaskStr[m_dwChannelMaskList[i]]);
+        }
+#endif
+    }
+
+    return true;
+}
+
 HRESULT CMpcAudioRenderer::SelectFormat(const WAVEFORMATEX* pwfx, WAVEFORMATEXTENSIBLE& wfex)
 {
-	// first - check variables ...
-	if (m_wBitsPerSampleList.empty()
-			|| m_AudioParamsList.empty()
-			|| m_nChannelsList.empty()) {
-		return E_FAIL;
+    bool check_channel_list = false;
+    WORD nChannels      = 0;
+	DWORD dwChannelMask = 0;
+
+	if (m_bUseSystemLayoutChannels) {
+		// to get the number of channels and channel mask quite simple call IAudioClient::GetMixFormat()
+		WAVEFORMATEX *pDeviceFormat = nullptr;
+		if (SUCCEEDED(m_pAudioClient->GetMixFormat(&pDeviceFormat)) && pDeviceFormat) {
+			nChannels = pDeviceFormat->nChannels;
+			dwChannelMask = GetChannelMask(pDeviceFormat, nChannels);
+
+			CoTaskMemFree(pDeviceFormat);
+		}
 	}
+
+    if (!nChannels) {
+        nChannels = pwfx->nChannels;
+        switch (nChannels) {
+            case 1:
+            case 3:
+                nChannels = 2;
+                break;
+            case 5:
+                nChannels = 6;
+                break;
+            case 7:
+                nChannels = 8;
+                break;
+        }
+
+        dwChannelMask = GetChannelMask(pwfx, nChannels);
+
+        check_channel_list = true;
+    }
+
+    // check directly first when supported format list does not yet exist
+    if (m_nChannelsList.empty()) {
+        WAVEFORMATEXTENSIBLE wfex_test;
+        CreateFormat(wfex_test, pwfx->wBitsPerSample, nChannels, dwChannelMask, pwfx->nSamplesPerSec);
+        if (S_OK == m_pAudioClient->IsFormatSupported(AUDCLNT_SHAREMODE_EXCLUSIVE, (WAVEFORMATEX*)&wfex_test, nullptr)) {
+            CreateFormat(wfex, pwfx->wBitsPerSample, nChannels, dwChannelMask, pwfx->nSamplesPerSec);
+            return S_OK;
+        }
+    }
+
+    if (!CreateFormatSupportList()) {
+        return E_FAIL;
+    }
 
 	// trying to create an output media type similar to input media type ...
 
@@ -2671,37 +2721,7 @@ HRESULT CMpcAudioRenderer::SelectFormat(const WAVEFORMATEX* pwfx, WAVEFORMATEXTE
 		}
 	}
 
-	WORD nChannels      = 0;
-	DWORD dwChannelMask = 0;
-
-	if (m_bUseSystemLayoutChannels) {
-		// to get the number of channels and channel mask quite simple call IAudioClient::GetMixFormat()
-		WAVEFORMATEX *pDeviceFormat = nullptr;
-		if (SUCCEEDED(m_pAudioClient->GetMixFormat(&pDeviceFormat)) && pDeviceFormat) {
-			nChannels = pDeviceFormat->nChannels;
-			dwChannelMask = GetChannelMask(pDeviceFormat, nChannels);
-
-			CoTaskMemFree(pDeviceFormat);
-		}
-	}
-
-	if (!nChannels) {
-		nChannels = pwfx->nChannels;
-		switch (nChannels) {
-			case 1:
-			case 3:
-				nChannels = 2;
-				break;
-			case 5:
-				nChannels = 6;
-				break;
-			case 7:
-				nChannels = 8;
-				break;
-		}
-
-		dwChannelMask = GetChannelMask(pwfx, nChannels);
-
+    if (check_channel_list) {
 		if (Contains(m_nChannelsList, nChannels) == false) {
 			nChannels     = m_nChannelsList[m_nChannelsList.size() - 1];
 			auto idx = std::distance(m_nChannelsList.begin(), std::find(m_nChannelsList.begin(), m_nChannelsList.end(), nChannels));

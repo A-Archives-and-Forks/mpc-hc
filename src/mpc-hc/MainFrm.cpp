@@ -19022,6 +19022,26 @@ bool CMainFrame::BuildGraphVideoAudio(int fVPreview, bool fVCapture, int fAPrevi
 
     HRESULT hr;
 
+    if (fVPreview) {
+        m_OSD.Stop();
+
+        m_pMVRS.Release();
+        m_pMVRFG.Release();
+        m_pMVRSR.Release();
+        m_pMVTO.Release();
+
+        m_pCAP3.Release();
+        m_pCAP2.Release();
+        m_pCAP.Release();
+        m_pVMRWC.Release();
+        m_pVMRMC.Release();
+        m_pVMB.Release();
+        m_pMFVMB.Release();
+        m_pMFVP.Release();
+        m_pMFVDC.Release();
+        m_pQP.Release();
+    }
+
     m_pGB->NukeDownstream(m_pVidCap);
     m_pGB->NukeDownstream(m_pAudCap);
 
@@ -19073,22 +19093,6 @@ bool CMainFrame::BuildGraphVideoAudio(int fVPreview, bool fVCapture, int fAPrevi
         }
 
         if (fVidPrev) {
-            m_pMVRS.Release();
-            m_pMVRFG.Release();
-            m_pMVRSR.Release();
-
-            m_OSD.Stop();
-            m_pCAP3.Release();
-            m_pCAP2.Release();
-            m_pCAP.Release();
-            m_pVMRWC.Release();
-            m_pVMRMC.Release();
-            m_pVMB.Release();
-            m_pMFVMB.Release();
-            m_pMFVP.Release();
-            m_pMFVDC.Release();
-            m_pQP.Release();
-
             m_pGB->Render(pVidPrevPin);
 
             m_pGB->FindInterface(IID_PPV_ARGS(&m_pCAP), TRUE);
@@ -19115,8 +19119,6 @@ bool CMainFrame::BuildGraphVideoAudio(int fVPreview, bool fVCapture, int fAPrevi
             }
 
             if (s.fShowOSD || s.fShowDebugInfo) { // Force OSD on when the debug switch is used
-                m_OSD.Stop();
-
                 if (m_pMVTO) {
                     m_OSD.Start(m_pVideoWnd, m_pMVTO);
                 } else if (m_fFullScreen && !m_fAudioOnly && m_pCAP3) { // MPCVR

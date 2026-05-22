@@ -664,8 +664,12 @@ void CPlayerCaptureDialog::InitControls()
 
 void CPlayerCaptureDialog::EmptyVideo()
 {
-    // first save channel from previous session
+    if (!this) {
+        ASSERT(false);
+        return;
+    }
 
+    // first save channel from previous session
     if (m_pAMTuner && !m_vidDisplayName.IsEmpty()) {
         long lChannel = 0, lVivSub = 0, lAudSub = 0;
         m_pAMTuner->get_Channel(&lChannel, &lVivSub, &lAudSub);
@@ -699,6 +703,10 @@ void CPlayerCaptureDialog::EmptyVideo()
 
 void CPlayerCaptureDialog::EmptyAudio()
 {
+    if (!this) {
+        return;
+    }
+
     m_afa.RemoveAll();
 
     m_pAMASC = nullptr;

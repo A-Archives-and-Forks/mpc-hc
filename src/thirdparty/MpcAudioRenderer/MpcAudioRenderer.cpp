@@ -2933,6 +2933,9 @@ HRESULT CMpcAudioRenderer::RenderWasapiBuffer()
 					break;
 				}
 			}
+			if (m_CurrentPacket->size() == 0) {
+				continue;
+			}
 
 			if (!m_nSampleOffset) {
 				const REFERENCE_TIME rtTimeDelta = m_CurrentPacket->rtStart - m_rtNextRenderedSampleTime;

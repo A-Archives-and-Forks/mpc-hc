@@ -31,6 +31,7 @@
 #include "../Subtitles/TextFile.h"
 #include "YoutubeDL.h"
 #include "AppSettings.h"
+#include "CMPCThemeInlineEdit.h"
 
 
 class OpenMediaData;
@@ -64,6 +65,7 @@ private:
 
     CMainFrame* m_pMainFrame;
     int inlineEditXpos;
+    CMPCThemeInlineEdit m_edit;
 
     CFont m_font;
     void ScaleFont();
@@ -167,7 +169,6 @@ public:
     void SetFirstSelected();
     void SetFirst();
     void SetLast();
-    void EnsureCurrentVisible();
     void SetCurValid(bool fValid);
     void SetCurLabel(CString label);
     void SetCurTime(REFERENCE_TIME rt);

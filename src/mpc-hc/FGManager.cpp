@@ -813,13 +813,14 @@ HRESULT CFGManager::Connect(IPin* pPinOut, IPin* pPinIn, bool bContinueRender)
 
     // 4. Look up filters in the registry
 
+    bool optional_pin = false;
     {
-        // workaround for Cyberlink video decoder, which can have an unwanted output pin
-        if (clsid_pinout == GUIDFromCString(_T("{F8FC6C1F-DE81-41A8-90FF-0316FDD439FD}"))) {
-            CPinInfo infoPinOut;
-            if (SUCCEEDED(pPinOut->QueryPinInfo(&infoPinOut))) {
-                if (CString(infoPinOut.achName) == L"~Encode Out") {
-                    // ignore this pin
+        CPinInfo infoPinOut;
+        if (SUCCEEDED(pPinOut->QueryPinInfo(&infoPinOut))) {
+            if (infoPinOut.achName[0] == L'~') {
+                optional_pin = true;
+                // workaround for Cyberlink video decoder, which can have an unwanted pin "~Encode Out"
+                if (clsid_pinout == GUIDFromCString(_T("{F8FC6C1F-DE81-41A8-90FF-0316FDD439FD}"))) {
                     return S_OK;
                 }
             }
@@ -1058,8 +1059,7 @@ HRESULT CFGManager::Connect(IPin* pPinOut, IPin* pPinIn, bool bContinueRender)
                 GRAPH_LOG(L"Can't connect");
             }
             TRACE(_T("FGM: Failed to connect to %s\n"), CLSIDToString(clsid_pinout));
-            CPinInfo infoPinOut;
-            if (SUCCEEDED(pPinOut->QueryPinInfo(&infoPinOut))) {
+            if (infoPinOut.pFilter) {
                 TRACE(_T("FGM: Output pin name: %s\n"), infoPinOut.achName);
             }
             EXECUTE_ASSERT(SUCCEEDED(RemoveFilter(pBF)));
@@ -1068,7 +1068,7 @@ HRESULT CFGManager::Connect(IPin* pPinOut, IPin* pPinIn, bool bContinueRender)
         }
     }
 
-    if (fDeadEnd) {
+    if (fDeadEnd && pPinOut && !optional_pin) {
         CAutoPtr<CStreamDeadEnd> psde(DEBUG_NEW CStreamDeadEnd());
         psde->AddTailList(&m_streampath);
         int skip = 0;

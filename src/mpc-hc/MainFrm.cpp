@@ -2708,6 +2708,11 @@ LRESULT CMainFrame::OnDoStandby(WPARAM wParam, LPARAM lParam)
         CloseMedia(false);
     }
 
+    CAppSettings& s = AfxGetAppSettings(); 
+    if (s.nCLSwitches & CLSW_STANDBY) {
+        s.nCLSwitches ^= CLSW_STANDBY;
+    }     
+    
     SetPrivilege(SE_SHUTDOWN_NAME);
     SetSystemPowerState(TRUE, FALSE);
 
@@ -2718,6 +2723,11 @@ LRESULT CMainFrame::OnDoHibernate(WPARAM wParam, LPARAM lParam)
 {
     if (GetLoadState() != MLS::CLOSED) {
         CloseMedia(false);
+    }
+
+    CAppSettings& s = AfxGetAppSettings();
+    if (s.nCLSwitches & CLSW_HIBERNATE) {
+        s.nCLSwitches ^= CLSW_HIBERNATE;
     }
 
     SetPrivilege(SE_SHUTDOWN_NAME);
@@ -21882,8 +21892,9 @@ UINT CMainFrame::OnPowerBroadcast(UINT nPowerEvent, LPARAM nEventData)
 
     switch (nPowerEvent) {
         case PBT_APMSUSPEND:            // System is suspending operation.
+        case PBT_APMSTANDBY:
             TRACE(_T("OnPowerBroadcast - suspending\n"));
-            bWasPausedBeforeSuspention = FALSE;
+            bWasPausedBeforeSuspention = FALSE;   
 
             if (GetLoadState() == MLS::LOADED) {
                 if (AfxGetAppSettings().iReloadAfterLongPause >= 0) {
@@ -21905,6 +21916,7 @@ UINT CMainFrame::OnPowerBroadcast(UINT nPowerEvent, LPARAM nEventData)
             }
             break;
         case PBT_APMRESUMESUSPEND:     // System is resuming operation
+        case PBT_APMRESUMESTANDBY:
             TRACE(_T("OnPowerBroadcast - resuming\n"));
 
             // Resume if we paused before suspension.

@@ -2710,7 +2710,7 @@ LRESULT CMainFrame::OnDoStandby(WPARAM wParam, LPARAM lParam)
 
     CAppSettings& s = AfxGetAppSettings(); 
     if (s.nCLSwitches & CLSW_STANDBY) {
-        s.nCLSwitches ^= CLSW_STANDBY;
+        s.nCLSwitches ^= CLSW_STANDBY | CLSW_CLOSE;
     }     
     
     SetPrivilege(SE_SHUTDOWN_NAME);
@@ -2727,7 +2727,7 @@ LRESULT CMainFrame::OnDoHibernate(WPARAM wParam, LPARAM lParam)
 
     CAppSettings& s = AfxGetAppSettings();
     if (s.nCLSwitches & CLSW_HIBERNATE) {
-        s.nCLSwitches ^= CLSW_HIBERNATE;
+        s.nCLSwitches ^= CLSW_HIBERNATE | CLSW_CLOSE;
     }
 
     SetPrivilege(SE_SHUTDOWN_NAME);
@@ -21883,9 +21883,10 @@ bool CMainFrame::IsAeroSnapped()
 
 UINT CMainFrame::OnPowerBroadcast(UINT nPowerEvent, LPARAM nEventData)
 {
-    static BOOL bWasPausedBeforeSuspention;
+    static BOOL bWasPausedBeforeSuspention = FALSE;
 
-    if (USE_LOGGER(AfxGetAppSettings())) {
+    const CAppSettings& s = AfxGetAppSettings();
+    if (USE_LOGGER(s)) {
         PLAYER_LOG(_T("CMainFrame::OnPowerBroadcast (%u)"), nPowerEvent);
         FLUSH_LOGGER();
     }
@@ -21919,9 +21920,13 @@ UINT CMainFrame::OnPowerBroadcast(UINT nPowerEvent, LPARAM nEventData)
         case PBT_APMRESUMESTANDBY:
             TRACE(_T("OnPowerBroadcast - resuming\n"));
 
-            // Resume if we paused before suspension.
-            if (bWasPausedBeforeSuspention) {
-                PostMessage(WM_COMMAND, ID_PLAY_PLAY);
+            if (s.nCLSwitches & CLSW_CLOSE) {
+                PostMessage(WM_CLOSE);
+            } else {
+                // Resume if we paused before suspension.
+                if (bWasPausedBeforeSuspention) {
+                    PostMessage(WM_COMMAND, ID_PLAY_PLAY);
+                }
             }
             break;
     }
@@ -21943,7 +21948,7 @@ void CMainFrame::OnSessionChange(UINT nSessionState, UINT nId)
         return;
     }
 
-    static BOOL bWasPausedBeforeSessionChange;
+    static BOOL bWasPausedBeforeSessionChange = FALSE;
 
     switch (nSessionState) {
         case WTS_SESSION_LOCK:

@@ -24,10 +24,11 @@
 #define IDS_ARS_CHANNELS                57718
 #define IDS_ARS_WASAPI_METHOD           57719
 #define IDS_ARS_DUMMY_CHANNELS          57720
-#define IDS_ARS_TIP_BITEXACT_OUTPUT     57721
-#define IDS_ARS_TIP_ALT_CHECK_FORMAT    57722
-#define IDS_ARS_PAUSE_WHITE_NOISE       57723
-#define IDS_AG_DEFAULT                  57724
+#define IDS_ARS_PAUSE_KEEP_ACTIVE       57721
+#define IDS_ARS_TIP_BITEXACT_OUTPUT     57722
+#define IDS_ARS_TIP_ALT_CHECK_FORMAT    57723
+#define IDS_ARS_TIP_PAUSE_KEEP_ACTIVE   57724
+#define IDS_AG_DEFAULT                  57725
 
 // Next default values for new objects
 //

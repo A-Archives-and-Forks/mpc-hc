@@ -190,8 +190,8 @@ public:
 	STDMETHODIMP_(BOOL)           GetCrossFeed() override;
 	STDMETHODIMP                  SetDummyChannels(BOOL bValue) override;
 	STDMETHODIMP_(BOOL)           GetDummyChannels() override;
-	STDMETHODIMP                  SetPauseWhiteNoise(BOOL bValue) override;
-	STDMETHODIMP_(BOOL)           GetPauseWhiteNoise() override;
+	STDMETHODIMP                  SetPauseKeepActive(BOOL bValue) override;
+	STDMETHODIMP_(BOOL)           GetPauseKeepActive() override;
 
 	// CMpcAudioRenderer
 private:
@@ -271,7 +271,7 @@ private:
 	BOOL               m_bReleaseDeviceIdle;
 	BOOL               m_bUseCrossFeed;
 	BOOL               m_bDummyChannels;
-	BOOL               m_bPauseWhiteNoise;
+	BOOL               m_bPauseKeepActive;
 	uint32_t           m_nWhiteNoiseSeed;
 	FILTER_STATE       m_filterState;
 

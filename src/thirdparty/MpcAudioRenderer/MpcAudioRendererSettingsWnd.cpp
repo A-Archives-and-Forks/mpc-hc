@@ -1,5 +1,5 @@
 /*
- * (C) 2010-2020 see Authors.txt
+ * (C) 2010-2026 see Authors.txt
  *
  * This file is part of MPC-HC.
  *
@@ -100,7 +100,7 @@ bool CMpcAudioRendererSettingsWnd::OnActivate()
 	p.y += h20;
 	m_cbDummyChannels.Create(ResStr(IDS_ARS_DUMMY_CHANNELS), dwStyle | BS_AUTOCHECKBOX | BS_LEFTTEXT, CRect(p, CSize(m_dpi.ScaleX(320), m_fontheight)), this, IDC_PP_DUMMY_CHANNELS);
 	p.y += h20;
-	m_cbPauseWhiteNoise.Create(ResStr(IDS_ARS_PAUSE_WHITE_NOISE), dwStyle | BS_AUTOCHECKBOX | BS_LEFTTEXT, CRect(p, CSize(m_dpi.ScaleX(320), m_fontheight)), this, IDC_PP_PAUSE_WHITE_NOISE);
+	m_cbPauseKeepActive.Create(ResStr(IDS_ARS_PAUSE_KEEP_ACTIVE), dwStyle | BS_AUTOCHECKBOX | BS_LEFTTEXT, CRect(p, CSize(m_dpi.ScaleX(320), m_fontheight)), this, IDC_PP_PAUSE_KEEP_ACTIVE);
 	p.y += h20;
 	p.x += m_dpi.ScaleX(240);
 	m_btnReset.Create(ResStr(IDS_FILTER_RESET_SETTINGS), dwStyle | BS_MULTILINE, CRect(p, CSize(m_dpi.ScaleX(80), m_fontheight + 10)), this, IDC_PP_RESET);
@@ -144,7 +144,7 @@ bool CMpcAudioRendererSettingsWnd::OnActivate()
 		m_cbReleaseDeviceIdle.SetCheck(m_pMAR->GetReleaseDeviceIdle());
 		m_cbUseCrossFeed.SetCheck(m_pMAR->GetCrossFeed());
 		m_cbDummyChannels.SetCheck(m_pMAR->GetDummyChannels());
-		m_cbPauseWhiteNoise.SetCheck(m_pMAR->GetPauseWhiteNoise());
+		m_cbPauseKeepActive.SetCheck(m_pMAR->GetPauseKeepActive());
 	}
 
 	for (CWnd* pWnd = GetWindow(GW_CHILD); pWnd; pWnd = pWnd->GetNextWindow()) {
@@ -159,7 +159,7 @@ bool CMpcAudioRendererSettingsWnd::OnActivate()
 	OnClickedWasapiMode();
 
 	OnClickedFreeDeviceInactive();
-	OnClickedPauseWhiteNoice();
+	OnClickedPauseKeepActive();
 
 	EnableToolTips(TRUE);
 
@@ -184,7 +184,7 @@ bool CMpcAudioRendererSettingsWnd::OnApply()
 		m_pMAR->SetReleaseDeviceIdle(m_cbReleaseDeviceIdle.GetCheck());
 		m_pMAR->SetCrossFeed(m_cbUseCrossFeed.GetCheck());
 		m_pMAR->SetDummyChannels(m_cbDummyChannels.GetCheck());
-		m_pMAR->SetPauseWhiteNoise(m_cbPauseWhiteNoise.GetCheck());
+		m_pMAR->SetPauseKeepActive(m_cbPauseKeepActive.GetCheck());
 		int idx = m_cbSoundDevice.GetCurSel();
 		if (idx >= 0) {
 			m_pMAR->SetDeviceId(m_deviceList[idx].deviceId, m_deviceList[idx].deviceName);
@@ -199,7 +199,7 @@ BEGIN_MESSAGE_MAP(CMpcAudioRendererSettingsWnd, CMPCThemeInternalPropertyPageWnd
 	ON_CBN_SELCHANGE(IDC_PP_WASAPI_MODE, OnClickedWasapiMode)
 	ON_BN_CLICKED(IDC_PP_USE_BITEXACT_OUTPUT, OnClickedBitExact)
 	ON_BN_CLICKED(IDC_PP_FREE_DEVICE_INACTIVE, OnClickedFreeDeviceInactive)
-	ON_BN_CLICKED(IDC_PP_PAUSE_WHITE_NOISE, OnClickedPauseWhiteNoice)
+	ON_BN_CLICKED(IDC_PP_PAUSE_KEEP_ACTIVE, OnClickedPauseKeepActive)
 	ON_BN_CLICKED(IDC_PP_RESET, OnBnClickedReset)
 	ON_NOTIFY_EX(TTN_NEEDTEXTW, 0, OnToolTipNotify)
 END_MESSAGE_MAP()
@@ -220,12 +220,12 @@ void CMpcAudioRendererSettingsWnd::OnClickedBitExact()
 
 void CMpcAudioRendererSettingsWnd::OnClickedFreeDeviceInactive()
 {
-	m_cbPauseWhiteNoise.EnableWindow(!m_cbReleaseDeviceIdle.GetCheck());
+	m_cbPauseKeepActive.EnableWindow(!m_cbReleaseDeviceIdle.GetCheck());
 }
 
-void CMpcAudioRendererSettingsWnd::OnClickedPauseWhiteNoice()
+void CMpcAudioRendererSettingsWnd::OnClickedPauseKeepActive()
 {
-	m_cbReleaseDeviceIdle.EnableWindow(!m_cbPauseWhiteNoise.GetCheck());
+	m_cbReleaseDeviceIdle.EnableWindow(!m_cbPauseKeepActive.GetCheck());
 }
 
 void CMpcAudioRendererSettingsWnd::OnBnClickedReset()
@@ -240,12 +240,12 @@ void CMpcAudioRendererSettingsWnd::OnBnClickedReset()
 	m_cbReleaseDeviceIdle.SetCheck(BST_CHECKED);
 	m_cbUseCrossFeed.SetCheck(BST_UNCHECKED);
 	m_cbDummyChannels.SetCheck(BST_UNCHECKED);
-	m_cbPauseWhiteNoise.SetCheck(BST_UNCHECKED);
+	m_cbPauseKeepActive.SetCheck(BST_UNCHECKED);
 
 	OnClickedWasapiMode();
 
 	OnClickedFreeDeviceInactive();
-	OnClickedPauseWhiteNoice();
+	OnClickedPauseKeepActive();
 }
 
 BOOL CMpcAudioRendererSettingsWnd::OnToolTipNotify(UINT id, NMHDR * pNMHDR, LRESULT * pResult)
@@ -269,6 +269,9 @@ BOOL CMpcAudioRendererSettingsWnd::OnToolTipNotify(UINT id, NMHDR * pNMHDR, LRES
 		case IDC_PP_ALT_FORMAT_CHECK:
 			strTipText = ResStr(IDS_ARS_TIP_ALT_CHECK_FORMAT);
 			break;
+		case IDC_PP_PAUSE_KEEP_ACTIVE:
+			strTipText = ResStr(IDS_ARS_TIP_PAUSE_KEEP_ACTIVE);
+			break;		
 		default:
 			return FALSE;
 		}

@@ -5041,6 +5041,10 @@ msgctxt "IDS_AG_DEFAULT"
 msgid "Default"
 msgstr "Par défaut"
 
+msgctxt "IDS_ARS_PAUSE_KEEP_ACTIVE"
+msgid "Keep audio device active when paused"
+msgstr ""
+
 msgctxt "IDS_ARS_TIP_BITEXACT_OUTPUT"
 msgid ""
 "If possible, the audio will be sent out in its original format.\n"
@@ -5055,8 +5059,8 @@ msgstr ""
 "Le moteur de rendu tentera d'initialiser le dispositif en sautant certaines "
 "vérifications."
 
-msgctxt "IDS_ARS_PAUSE_WHITE_NOISE"
-msgid "Keep audio device active when paused (inaudible noise)"
+msgctxt "IDS_ARS_TIP_PAUSE_KEEP_ACTIVE"
+msgid "The renderer will send inaudible noise to the device."
 msgstr ""
 
 msgctxt "IDS_CMD_THUMBNAILS"

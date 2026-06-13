@@ -584,24 +584,30 @@ std::map<CStringW, CStringW> GetAudioDeviceList() {
         }
         CStringW dispname(olestr);
         CStringW friendlyname;
-        CComPtr<IPropertyBag> pPB;
-        if (SUCCEEDED(pMoniker->BindToStorage(0, 0, IID_PPV_ARGS(&pPB)))) {
-            CComVariant var;
-            if (SUCCEEDED(pPB->Read(_T("FriendlyName"), &var, nullptr))) {
-                CStringW frname(var.bstrVal);
-                var.Clear();
-                friendlyname = frname;
-                if (SUCCEEDED(pPB->Read(_T("WaveOutId"), &var, nullptr))) {
-                    DWORD dw = var.intVal;
-                    var.Clear();
-                    if (dw != -1) { // skip default waveout
-                        friendlyname = L"WaveOut: " + friendlyname;
-                    }
-                    friendlyname.Append(L"  [Deprecated]");
-                }
-            }
+        if (dispname == L"@device:cm:{E0F158E1-CB04-11D0-BD4E-00A0C911CE86}\\Default DirectSound Device") {
+            friendlyname = L"DirectSound: Default Device";
+        } else if (dispname == L"@device:cm:{E0F158E1-CB04-11D0-BD4E-00A0C911CE86}\\Default WaveOut Device") {
+            friendlyname = L"WaveOut: Default Device  [Old/Do not use]";
         } else {
-            friendlyname = dispname;
+            CComPtr<IPropertyBag> pPB;
+            if (SUCCEEDED(pMoniker->BindToStorage(0, 0, IID_PPV_ARGS(&pPB)))) {
+                CComVariant var;
+                if (SUCCEEDED(pPB->Read(_T("FriendlyName"), &var, nullptr))) {
+                    CStringW frname(var.bstrVal);
+                    var.Clear();
+                    friendlyname = frname;
+                    if (SUCCEEDED(pPB->Read(_T("WaveOutId"), &var, nullptr))) {
+                        DWORD dw = var.intVal;
+                        var.Clear();
+                        if (dw != -1) { // skip default waveout
+                            friendlyname = L"WaveOut: " + friendlyname;
+                        }
+                        friendlyname.Append(L"  [Old/Do not use]");
+                    }
+                }
+            } else {
+                friendlyname = dispname;
+            }
         }
         devicelist.emplace(friendlyname, dispname);
     }

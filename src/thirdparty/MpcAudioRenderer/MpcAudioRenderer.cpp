@@ -165,6 +165,7 @@ CMpcAudioRenderer::CMpcAudioRenderer(LPUNKNOWN punk, HRESULT *phr)
 	, m_nFramesInBuffer(0)
 	, m_nMaxWasapiQueueSize(0)
 	, m_bIsAudioClientStarted(false)
+    , m_bPendingAudioClientChange(false)
 	, m_lVolume(DSBVOLUME_MAX)
 	, m_lBalance(DSBPAN_CENTER)
 	, m_dVolumeFactor(1.0)
@@ -671,9 +672,11 @@ DWORD CMpcAudioRenderer::RenderThread()
 
 		DWORD result = -1;
 		if (m_WasapiMethod == WASAPI_METHOD::PUSH) {
-			HRESULT hr = RenderWasapiBuffer();
-			if (hr == AUDCLNT_E_DEVICE_INVALIDATED) {
-				SetReinitializeAudioDevice(TRUE);
+			if (m_pAudioClient && m_pRenderClient && !m_bPendingAudioClientChange) {
+				HRESULT hr = RenderWasapiBuffer();
+				if (hr == AUDCLNT_E_DEVICE_INVALIDATED) {
+					SetReinitializeAudioDevice(TRUE);
+				}
 			}
 
 			result = WaitForMultipleObjects(std::size(renderHandles) - 1, renderHandles, FALSE, m_hnsBufferDuration / 10000 / 2);
@@ -701,7 +704,7 @@ DWORD CMpcAudioRenderer::RenderThread()
 
 					DWORD resultResume;
 					for (;;) {
-						if (m_bPauseKeepActive && !m_bIsBitstream && !m_bReleaseDeviceIdle && m_pRenderClient) {
+						if (m_bPauseKeepActive && !m_bPendingAudioClientChange && m_bIsAudioClientStarted && !m_bIsBitstream && !m_bReleaseDeviceIdle && m_pRenderClient) {
 							RenderWasapiBuffer();
 							DWORD waitMs = (m_pWaveFormatExOutput && m_nFramesInBuffer)
 								? (m_nFramesInBuffer * 500u / m_pWaveFormatExOutput->nSamplesPerSec)
@@ -730,11 +733,13 @@ DWORD CMpcAudioRenderer::RenderThread()
 			case WAIT_OBJECT_0 + 2: // render event
 				{
 #if defined(DEBUG_OR_LOG) && DBGLOG_LEVEL > 1
-					TRACE(L"CMpcAudioRenderer::RenderThread() - Data Event, Audio client state = %s", m_bIsAudioClientStarted ? L"Started" : L"Stoped\n");
+					TRACE(L"CMpcAudioRenderer::RenderThread() - Data Event, Audio client state = %s", m_bIsAudioClientStarted ? L"Started" : L"Stopped\n");
 #endif
-					HRESULT hr = RenderWasapiBuffer();
-					if (hr == AUDCLNT_E_DEVICE_INVALIDATED) {
-						SetReinitializeAudioDevice(TRUE);
+					if (m_pAudioClient && m_pRenderClient && !m_bPendingAudioClientChange) {
+						HRESULT hr = RenderWasapiBuffer();
+						if (hr == AUDCLNT_E_DEVICE_INVALIDATED) {
+							SetReinitializeAudioDevice(TRUE);
+						}
 					}
 				}
 				break;
@@ -1882,6 +1887,7 @@ HRESULT CMpcAudioRenderer::InitAudioClient()
 	}
 
 	if (m_pAudioClient) {
+		m_bPendingAudioClientChange = true;
 		PauseRendererThread();
 		m_bIsAudioClientStarted = false;
 
@@ -1893,6 +1899,7 @@ HRESULT CMpcAudioRenderer::InitAudioClient()
 		TRACE(L"CMpcAudioRenderer::InitAudioClient() - IMMDevice::Activate() failed: (0x%08x)\n", hr);
 	} else {
 		TRACE(L"CMpcAudioRenderer::InitAudioClient() - success\n");
+		m_bPendingAudioClientChange = false;
 
 		if (!m_bReal32bitSupportChecked) {
 			m_bReal32bitSupportChecked = true;
@@ -1931,6 +1938,7 @@ HRESULT CMpcAudioRenderer::CreateAudioClient(const BOOL bForceUseDefaultDevice/*
 HRESULT CMpcAudioRenderer::CheckAudioClient(const WAVEFORMATEX *pWaveFormatEx)
 {
 	CAutoLock cAutoLock(&m_csCheck);
+	CAutoLock cRenderLock(&m_csRender);
 	TRACE(L"CMpcAudioRenderer::CheckAudioClient()\n");
 
 	BOOL bForceUseDefaultDevice = FALSE;
@@ -1951,11 +1959,12 @@ again:
 	};
 
 	auto ReleaseAudio = [this](const bool bFull = false) {
-		m_csRender.Unlock();
-
+		m_bPendingAudioClientChange = true;
 		m_pSyncClock->UnSlave();
-
+		ASSERT(m_csRender.m_lockCount > 0);
+		m_csRender.Unlock(); // in case other thread is waiting for lock in RenderWasapiBuffer
 		PauseRendererThread();
+		m_csRender.Lock();
 		m_bIsAudioClientStarted = false;
 
 		SAFE_RELEASE(m_pRenderClient);
@@ -1966,8 +1975,6 @@ again:
 			SAFE_RELEASE(m_pMMDevice);
 		}
 	};
-
-	CAutoLock cRenderLock(&m_csRender);
 
 	BOOL bInitNeed = TRUE;
 	// Compare the existing WAVEFORMATEX with the one provided
@@ -2365,6 +2372,7 @@ HRESULT CMpcAudioRenderer::CreateRenderClient(WAVEFORMATEX *pWaveFormatEx, const
 		hr = m_pAudioClient->GetBufferSize(&m_nFramesInBuffer);
 
 		// throw away this IAudioClient
+		m_bPendingAudioClientChange = true;
 		PauseRendererThread();
 		m_bIsAudioClientStarted = false;
 
@@ -2848,6 +2856,7 @@ HRESULT CMpcAudioRenderer::ReinitializeAudioDevice(BOOL bFullInitialization/* = 
 {
 	TRACE(L"CMpcAudioRenderer::ReinitializeAudioDevice()\n");
 
+	m_bPendingAudioClientChange = true;
 	PauseRendererThread();
 
 	CAutoLock cRenderLock(&m_csRender);
@@ -2977,13 +2986,18 @@ void CMpcAudioRenderer::FillPauseWhiteNoise(BYTE* pData, UINT32 nBytes)
 
 HRESULT CMpcAudioRenderer::RenderWasapiBuffer()
 {
+	CheckPointer(m_pAudioClient, S_OK);
 	CheckPointer(m_pRenderClient, S_OK);
 	CheckPointer(m_pWaveFormatExOutput, S_OK);
 
 	CAutoLock cRenderLock(&m_csRender);
 
-	CheckPointer(m_pRenderClient, E_FAIL);
-	CheckPointer(m_pWaveFormatExOutput, E_FAIL);
+	ASSERT(m_csRender.m_lockCount > 0);
+
+	if (m_bPendingAudioClientChange || !m_pAudioClient || !m_pRenderClient || !m_pWaveFormatExOutput) {
+		ASSERT(false);
+		return E_FAIL;
+	}
 
 	HRESULT hr = S_OK;
 
@@ -3309,6 +3323,7 @@ void CMpcAudioRenderer::ReleaseDevice()
 
 	m_bReleased = true;
 
+	m_bPendingAudioClientChange = true;
 	PauseRendererThread();
 	m_bIsAudioClientStarted = false;
 
@@ -3319,6 +3334,7 @@ void CMpcAudioRenderer::ReleaseDevice()
 		SAFE_RELEASE(m_pAudioClock);
 		SAFE_RELEASE(m_pAudioClient);
 	} else if (m_pAudioClient) {
+		m_bPendingAudioClientChange = false;
 		m_pAudioClient->Stop();
 	}
 

@@ -264,6 +264,7 @@ private:
 	UINT32             m_nFramesInBuffer;
 	size_t             m_nMaxWasapiQueueSize;
 	bool               m_bIsAudioClientStarted;
+	bool               m_bPendingAudioClientChange;
 	BOOL               m_bIsBitstream;
 	BITSTREAM_MODE     m_BitstreamMode;
 	BOOL               m_bUseBitExactOutput;
